@@ -16,13 +16,13 @@
     .secrets
     .appinfo
     ```
-4. Choose what your unique front and backend app names will be. If someone else on Fly.io already has an app with the same name, they will ask you to choose a new name. So the more unique, the better. Something like `myuniqueapp001-backend` and `myuniqueapp001-frontend` should do the trick.
-5. In `.appinfo` add (replacing the `<...>` parts with the names you chose above):
+5. Choose what your unique front and backend app names will be. If someone else on Fly.io already has an app with the same name, they will ask you to choose a new name. So the more unique, the better. Something like `myuniqueapp001-backend` and `myuniqueapp001-frontend` should do the trick.
+6. In `.appinfo` add (replacing the `<...>` parts with the names you chose above):
     ```
     backend app name: <your backend app name>
     frontend app name: <your frontend app name>
-    backend app url: 
-    frontend app url: 
+    backend app url: https://<your backend app name>.fly.dev
+    frontend app url: https://<your frontend app name>.fly.dev
     ```
 
 ## Local Frontend Setup (Nuxt)
