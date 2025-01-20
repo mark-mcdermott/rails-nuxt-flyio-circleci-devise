@@ -270,8 +270,6 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     ```
 3. Run RSpec locally:
     - `rspec` (1 test should run and pass)
-4. Let's redeploy our backend now and check rspec in prod:
+4. Let's redeploy our backend now
     - `fly deploy`
-    - `fly ssh`
-      - `rpsec`
-      - `exit`
+
