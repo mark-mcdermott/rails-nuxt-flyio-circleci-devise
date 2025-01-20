@@ -272,4 +272,67 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `rspec` (1 test should run and pass)
 4. Let's redeploy our backend now
     - `fly deploy`
+5. `cd ..`
 
+# Test Locally On Docker
+1. In the root directory of our app, let's create a `docker-compose.yml`:
+    - `touch docker-compose.yml`
+    ```
+    services:
+      db:
+        image: postgres:13.4
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: backend_test
+          POSTGRES_PASSWORD: yourpassword  # Replace with a strong password
+        ports:
+          - "5432:5432"
+        volumes:
+          - db_data:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U postgres"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+
+      ruby:
+        image: ruby:3.3.7-bullseye
+        environment:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+          DB_HOST: db
+        volumes:
+          - ./backend:/app/backend
+        working_dir: /app/backend
+        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && bundle exec rails db:setup && bundle exec rspec"
+
+        depends_on:
+          db:
+            condition: service_healthy
+
+    volumes:
+      db_data:
+    ```
+2. In `backend/config/database.yml`, change the default setting to:
+    ```
+    default: &default
+      adapter: postgresql
+      encoding: unicode
+      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+      username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
+      password: <%= ENV.fetch("DB_PASSWORD", "yourpassword") %>
+      host: <%= ENV.fetch("DB_HOST", "localhost") %>
+    ```
+3. Run RSpec locally on Docker:
+    - `docker-compose down --volumes --remove-orphans`
+    - `docker-compose build --no-cache` (this may return immediately with no output, which is fine)
+    - `docker-compose up`
+    - `docker-compose exec ruby rspec`
+      - after lots of output and some waiting, you should see something like:
+      ```
+      ruby_1  | Finished in 0.05798 seconds (files took 1.27 seconds to load)
+      ruby_1  | 1 example, 0 failures
+      ```
+4. Make sure RSpec still works locally:
+    - `cd backend`
+    - `rspec` (you should see `1 example, 0 failures` here, too)
