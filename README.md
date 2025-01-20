@@ -82,6 +82,7 @@
 1. Set up Rails API-only backend with RSpec:
     - `rails new backend --api -T -d postgresql`
     - `cd backend`
+    - `rm -rf .git`
     - `bundle add rack-cors`
 2. in `backend/Gemfile` change line 3 (the ruby version line) to `ruby "~> 3.3"`
 3. Create a simple controller:
@@ -274,7 +275,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `fly deploy`
 5. `cd ..`
 
-# Test Locally On Docker
+# RSpec On Local Docker
 1. In the root directory of our app, let's create a `docker-compose.yml`:
     - `touch docker-compose.yml`
     ```
@@ -336,3 +337,25 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 4. Make sure RSpec still works locally:
     - `cd backend`
     - `rspec` (you should see `1 example, 0 failures` here, too)
+    - `cd ..`
+
+## RSpec On CircleCI
+1. You'll need to deploy the whole app to github.
+  - `git add .`
+  - `git commit -m "Add app"`
+  - Create a new public repo in the github UI
+  - `git branch -M main`
+  - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
+  - `git remote add origin <repo web url>`
+  - `git push -u origin main`
+2. Configure CircleCI for the new repo
+  - Login to CircleCI
+  - Click the "Go to application" button
+  - Click "Projects" in the left sidebar
+  - Find your new repo in the Project list
+  - In your repo's project row, click "Set up Project" towards the right.
+  - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
+  - In the "From which branch" field under "Fastest", type `main`
+  - Click the "Set up Project" button on the modal.
+  - This will take you to your new repo's "Pipeline" and a run will have started
+  - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
