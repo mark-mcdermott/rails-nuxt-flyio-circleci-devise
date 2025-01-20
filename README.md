@@ -231,8 +231,9 @@
     - It’ll ask you some questions:
       - "An existing fly.toml file was found. Would you like to copy its configuration to the new app?" Answer `y`
       - "Do you want to tweak these settings before proceeding?" Answer `N` or hit enter
-      - "Overwrite fly.toml?" Answer `n`
-    - After this, the deployment starts. It can take a few minutes to finish and a lot of output will scroll down your screen like the Matrix. Watch this output--some of it's important.
+      - When it asks, "Overwrite entrypoint?", press 'n' (but I think 'y' works)
+      - When it asks, "Overwrite fly.toml?", press 'n'
+      - After this, the deployment starts. It can take a few minutes to finish and a lot of output will scroll down your screen like the Matrix. Watch this output--some of it's important.
       - Watch the output and look for the "Postgres cluster details", which end with the line, "Save your credentials in a secure place -- you won't be able to see them again!" When you see it, copy and paste this section to your `.secrets` file.
 5. Go to your *frontend* app url in a browser.
     - You should see "Hello from Nuxt!" *and* "Hello from Rails!"
