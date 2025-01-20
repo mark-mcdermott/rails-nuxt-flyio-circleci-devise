@@ -184,11 +184,10 @@
 4. `fly launch`
     - When it asks, "A fly.toml file was found. Would you like to copy its configuration to the new app?", press `y`
     - When it asks, "Do you want to tweak these settings before proceeding?", press `N` or enter
-    - When it asks, "Create .dockerignore from 1 .gitignore files?", press `y`
     - When `fly launch` if finished, look at the output for "Visit your newly deployed app at `<url>`" and copy/paste the url into the "frontend app url" line of your `.appinfo`
 5. Go to your frontend app url in a browser.
     - You should see "Hello from Nuxt!", but not "Hello from Rails!"
-    - In the console, there will be a 404 response from the request to the backend (becuase they backend's not deployed yet)
+    - In the console, there will be a failed request to the backend (becuase they backend's not deployed yet)
 6. `cd ..` into the app's root directory
 
 ### Deploy Backend
