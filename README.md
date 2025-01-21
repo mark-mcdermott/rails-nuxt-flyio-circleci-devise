@@ -305,8 +305,19 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
         volumes:
           - ./backend:/app/backend
         working_dir: /app/backend
-        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && bundle exec rails db:setup && bundle exec rspec"
+        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && tail -f /dev/null"
+        depends_on:
+          db:
+            condition: service_healthy
 
+      frontend:
+        image: node:18-alpine
+        environment:
+          NODE_ENV: test
+        volumes:
+          - ./frontend:/app/frontend
+        working_dir: /app/frontend
+        command: sh -c "npm install && tail -f /dev/null"
         depends_on:
           db:
             condition: service_healthy
@@ -327,12 +338,10 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 3. Run RSpec locally on Docker:
     - `docker-compose down --volumes --remove-orphans`
     - `docker-compose up`
-      - after lots of output and some waiting, you should see something like:
-      ```
-      ruby_1  | Finished in 0.05798 seconds (files took 1.27 seconds to load)
-      ruby_1  | 1 example, 0 failures
-      ```
-    - `docker-compose exec ruby rspec` (this line isn't necessary unless you want to run RSpec directly)
+    - When the above command finshes, leave that terminal pane open and open a second
+      - In the second terminal pane:
+        - `docker-compose exec ruby bundle install`
+        - `docker-compose exec ruby bundle exec rspec` (1 test should pass)
       
 4. Make sure RSpec still works locally:
     - `cd backend`
@@ -472,3 +481,10 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     ```
 4. Run Vitest locally:
     - `npx vitest` (it should say 2 tests passed)
+
+## Vitest Docker
+- `docker-compose down --volumes --remove-orphans`
+- `docker-compose up`
+  - When the above command finshes, leave that terminal pane open and open a second
+    - In the second terminal pane:
+      - `docker-compose exec frontend npx vitest` (2 tests should pass)
