@@ -241,7 +241,7 @@
     - In the console, there should be no 404 errors
 6. `cd ..` into the app's root directory
 
-# RSpec
+# RSpec (Local)
 Here we'll create a simple RSpec test for the Rails HelloController. Then we'll verify it passes when running locally.
 1. Install RSpec:
     - `cd backend`
@@ -340,22 +340,91 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `cd ..`
 
 ## RSpec On CircleCI
-1. You'll need to deploy the whole app to github.
-  - `git add .`
-  - `git commit -m "Add app"`
-  - Create a new public repo in the github UI
-  - `git branch -M main`
-  - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
-  - `git remote add origin <repo web url>`
-  - `git push -u origin main`
-2. Configure CircleCI for the new repo
-  - Login to CircleCI
-  - Click the "Go to application" button
-  - Click "Projects" in the left sidebar
-  - Find your new repo in the Project list
-  - In your repo's project row, click "Set up Project" towards the right.
-  - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
-  - In the "From which branch" field under "Fastest", type `main`
-  - Click the "Set up Project" button on the modal.
-  - This will take you to your new repo's "Pipeline" and a run will have started
-  - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
+1. Let's create a `.circleci/config.yml` file, the file CircleCI uses for our CI/CD configuration:
+    - `mkdir .circleci`
+    - `touch .circleci/config.yml`
+    ```
+    version: 2.1
+
+    jobs:
+      test:
+        docker:
+          - image: ruby:3.3.7-bullseye
+            environment:
+              RAILS_ENV: test
+              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+              DB_HOST: db
+          - image: postgres:13.4
+            name: db
+            environment:
+              POSTGRES_USER: postgres
+              POSTGRES_DB: backend_test
+              POSTGRES_PASSWORD: yourpassword
+        steps:
+          - checkout
+          - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
+                - v1-dependencies-
+          
+          - run:
+              name: Install System Dependencies
+              command: |
+                apt-get update
+                apt-get install -y build-essential libpq-dev
+
+          - run:
+              name: Install Bundler
+              command: gem install bundler
+
+          - run:
+              name: Install Gems
+              command: |
+                cd backend
+                bundle config set path 'vendor/bundle'
+                bundle install --jobs=4 --retry=3
+
+          - save_cache:
+              paths:
+                - backend/vendor/bundle
+              key: v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
+
+          - run:
+              name: Setup Database
+              command: |
+                cd backend
+                bundle exec rails db:setup
+
+          - run:
+              name: Run RSpec Tests
+              command: |
+                cd backend
+                bundle exec rspec
+
+    workflows:
+      version: 2
+      test:
+        jobs:
+          - test
+    ```
+2. You'll need to deploy the whole app to github.
+    - `git add .`
+    - `git commit -m "Add app"`
+    - Create a new public repo in the github UI
+    - `git branch -M main`
+    - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
+    - `git remote add origin <repo web url>`
+    - `git push -u origin main`
+3. Configure CircleCI for the new repo
+    - Login to CircleCI
+    - Click the "Go to application" button
+    - Click "Projects" in the left sidebar
+    - Find your new repo in the Project list
+    - In your repo's project row, click "Set up Project" towards the right.
+    - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
+    - In the "From which branch" field under "Fastest", type `main`
+    - Click the "Set up Project" button on the modal.
+    - This will take you to your new repo's "Pipeline" and a run will have started
+    - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
+
+## Vitest (Local)
