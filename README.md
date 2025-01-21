@@ -232,7 +232,7 @@
     - It’ll ask you some questions:
       - "An existing fly.toml file was found. Would you like to copy its configuration to the new app?" Answer `y`
       - "Do you want to tweak these settings before proceeding?" Answer `N` or hit enter
-      - When it asks, "Overwrite entrypoint?", press 'n' (TODO: remove this parens? but I think 'y' works)
+      - When it asks, "Overwrite entrypoint?", press 'n'
       - When it asks, "Overwrite fly.toml?", press 'n'
       - After this, the deployment starts. It can take a few minutes to finish and a lot of output will scroll down your screen like the Matrix. Watch this output--some of it's important.
       - Watch the output and look for the "Postgres cluster details", which end with the line, "Save your credentials in a secure place -- you won't be able to see them again!" When you see it, copy and paste this section to your `.secrets` file.
@@ -328,12 +328,13 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `docker-compose down --volumes --remove-orphans`
     - `docker-compose build --no-cache` (this may return immediately with no output, which is fine)
     - `docker-compose up`
-    - `docker-compose exec ruby rspec`
       - after lots of output and some waiting, you should see something like:
       ```
       ruby_1  | Finished in 0.05798 seconds (files took 1.27 seconds to load)
       ruby_1  | 1 example, 0 failures
       ```
+    - `docker-compose exec ruby rspec` (this line isn't necessary unless you want to run RSpec directly)
+      
 4. Make sure RSpec still works locally:
     - `cd backend`
     - `rspec` (you should see `1 example, 0 failures` here, too)
