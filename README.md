@@ -452,55 +452,30 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
       },
     });
     ```
-3. Now we create our `spec` folder and create our test configuration file with our mocks
-    - `mkdir spec`
-    - `touch spec/setup.ts`
-    ```
-    /// frontend/test/setup.ts
-
-    import { beforeEach } from 'vitest';
-    import { config } from '@vue/test-utils';
-
-    // Mock any global configurations for Vue Test Utils
-    beforeEach(() => {
-      // Clear all mocks between tests
-      vi.resetAllMocks();
-    });
-
-    // Example: Mock useRuntimeConfig if needed
-    vi.mock('#app', () => ({
-      useRuntimeConfig: () => ({
-        public: { apiURL: 'http://mocked-backend/api/v1' },
-      }),
-    }));
-    ```
-4. Here is our actual component test:
-    - `mkdir spec/components`
+3. Here is our actual component test:
+    - `mkdir -p spec/components`
     - `touch spec/components/Hello.spec.ts`
     ```
-    /// frontend/test/components/Hello.spec.ts
-
     import { mount } from '@vue/test-utils';
     import { describe, it, expect, vi } from 'vitest';
     import Hello from '@/components/Hello.vue';
 
-    // Mock the fetch API
     global.fetch = vi.fn(async () => ({
       json: async () => ({ message: 'Mocked Hello from Rails!' }),
-    }));
+    }))
 
     describe('Hello.vue', () => {
       it('renders both frontend and backend messages', async () => {
-        const wrapper = mount(Hello);
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        const wrapper = mount(Hello)
+        await wrapper.vm.$nextTick()
         expect(wrapper.find('[data-testid="backend-message"]').text()).toBe(
           'Mocked Hello from Rails!'
-        );
+        )
         expect(wrapper.find('[data-testid="frontend-message"]').text()).toBe(
           'Hello from Nuxt!'
-        );
-      });
-    });
+        )
+      })
+    })
     ```
 5. Run Vitest locally:
     - `npx vitest`
