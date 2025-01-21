@@ -326,7 +326,6 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     ```
 3. Run RSpec locally on Docker:
     - `docker-compose down --volumes --remove-orphans`
-    - `docker-compose build --no-cache` (this may return immediately with no output, which is fine)
     - `docker-compose up`
       - after lots of output and some waiting, you should see something like:
       ```
