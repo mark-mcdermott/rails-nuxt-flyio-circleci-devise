@@ -431,52 +431,45 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 ## Vitest (Local)
 1. Let's install Vitest:
     - `cd frontend`
-    - `npm install -D vitest @vue/test-utils jsdom`
+    - `npm install -D vitest @vue/test-utils`
+2. Add this line to `nuxt.config.ts` inside the `defineNuxtConfig` area:
+    ```
+    modules: ['@nuxt/test-utils/module']
+    ```
 2. Now let's add a `vitest.config.ts` file, which is where our Vitest configurations are:
-    - `touch vitest.config.ts`
+    - `touch vite.config.ts`
     ```
     /// frontend/vitest.config.ts
 
-    import { defineConfig } from 'vitest/config';
-    import vue from '@vitejs/plugin-vue';
-
-    export default defineConfig({
-      plugins: [vue()],
-      test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './test/setup.ts',
-        coverage: {
-          provider: 'istanbul',
-          reporter: ['text', 'html'],
-        },
-      },
-    });
+    import { defineVitestConfig } from '@nuxt/test-utils/config'
+    export default defineVitestConfig({})
     ```
 3. Here is our actual component test:
     - `mkdir -p spec/components`
-    - `touch spec/components/Hello.spec.ts`
+    - `touch spec/components/Hello.nuxt.spec.ts`
     ```
-    import { mount } from '@vue/test-utils';
-    import { describe, it, expect, vi } from 'vitest';
-    import Hello from '@/components/Hello.vue';
+    // frontend/spec/components/Hello.nuxt.spec.ts
 
-    global.fetch = vi.fn(async () => ({
-      json: async () => ({ message: 'Mocked Hello from Rails!' }),
-    }))
+    import { describe, it, expect, vi } from 'vitest'
+    import { mount } from '@vue/test-utils'
+    import { flushPromises } from '@vue/test-utils' 
+    import Hello from './../../components/Hello.vue'
 
-    describe('Hello.vue', () => {
-      it('renders both frontend and backend messages', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      json: vi.fn().mockResolvedValue({ message: 'Hello from Rails!' })
+    }));
+
+    describe('Hello', () => {
+      it('component renders frontend message properly', async () => {
+        const wrapper = mount(Hello) 
+        expect(wrapper.text()).toContain('Hello from Nuxt!')
+      })
+      it('component renders backend message properly', async () => {
         const wrapper = mount(Hello)
-        await wrapper.vm.$nextTick()
-        expect(wrapper.find('[data-testid="backend-message"]').text()).toBe(
-          'Mocked Hello from Rails!'
-        )
-        expect(wrapper.find('[data-testid="frontend-message"]').text()).toBe(
-          'Hello from Nuxt!'
-        )
+        await flushPromises()   
+        expect(wrapper.text()).toContain('Hello from Rails!')
       })
     })
     ```
 4. Run Vitest locally:
-    - `npx vitest`
+    - `npx vitest` (it should say 2 tests passed)
