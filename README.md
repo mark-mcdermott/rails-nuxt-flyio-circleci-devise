@@ -483,8 +483,112 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `npx vitest` (it should say 2 tests passed)
 
 ## Vitest Docker
-- `docker-compose down --volumes --remove-orphans`
-- `docker-compose up`
-  - When the above command finshes, leave that terminal pane open and open a second
-    - In the second terminal pane:
-      - `docker-compose exec frontend npx vitest` (2 tests should pass)
+    - `docker-compose down --volumes --remove-orphans`
+    - `docker-compose up`
+      - When the above command finshes, leave that terminal pane open and open a second
+        - In the second terminal pane:
+          - `docker-compose exec frontend npx vitest` (2 tests should pass)
+
+## Vitest CircleCI
+    - Let's change our `.circleci/config.yml` to this:
+    ```
+    version: 2.1
+
+    jobs:
+      test_backend:
+        docker:
+          - image: ruby:3.3.7-bullseye
+            environment:
+              RAILS_ENV: test
+              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+              DB_HOST: db
+          - image: postgres:13.4
+            name: db
+            environment:
+              POSTGRES_USER: postgres
+              POSTGRES_DB: backend_test
+              POSTGRES_PASSWORD: yourpassword
+        steps:
+          - checkout
+          
+          - restore_cache:
+              keys:
+                - v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+                - v1-backend-dependencies-
+
+          - run:
+              name: Install System Dependencies
+              command: |
+                apt-get update
+                apt-get install -y build-essential libpq-dev
+
+          - run:
+              name: Install Bundler
+              command: gem install bundler
+
+          - run:
+              name: Install Gems
+              command: |
+                cd backend
+                bundle config set path 'vendor/bundle'
+                bundle install --jobs=4 --retry=3
+
+          - save_cache:
+              paths:
+                - backend/vendor/bundle
+              key: v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+
+          - run:
+              name: Setup Database
+              command: |
+                cd backend
+                bundle exec rails db:setup
+
+          - run:
+              name: Run RSpec Tests
+              command: |
+                cd backend
+                bundle exec rspec
+
+      test_frontend:
+        docker:
+          - image: node:18
+        steps:
+          - checkout
+
+          - restore_cache:
+              keys:
+                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+                - v1-frontend-dependencies-
+
+          - run:
+              name: Install Node.js Dependencies
+              command: |
+                cd frontend
+                npm ci
+
+          - save_cache:
+              paths:
+                - frontend/node_modules
+              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+
+          - run:
+              name: Run Vitest Tests
+              command: |
+                cd frontend
+                npm run test
+
+    workflows:
+      version: 2
+      test:
+        jobs:
+          - test_backend
+          - test_frontend
+    ```
+
+
+
+
+
+
+`docker-compose exec frontend npx playwright test`
