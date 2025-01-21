@@ -592,7 +592,53 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - Then the tests will start on CircleCI
     - Both `test_frontend` (Vitest) and `test_backend` (RSpec) should pass
 
+## Playwright (Local)
+1. First we'll install Playwright:
+    - `cd frontend`
+    - `npm install -D @playwright/test`
+    - `npx playwright install`
+2. Then we'll configure Playwright:
+    - `touch playwright.config.ts`
+    ```
+    // frontend/playwright.config.ts
 
+    import { defineConfig } from '@playwright/test';
+
+    export default defineConfig({
+      testDir: './e2e',
+      use: {
+        baseURL: 'http://localhost:3001',
+        browserName: 'chromium',
+        headless: true, // Change to `false` to see the browser in action
+      },
+      webServer: {
+        command: 'npm run dev',
+        port: 3001,
+        reuseExistingServer: true,
+      },
+    });
+    ```
+3. Now we'll create our Playwright test:
+    - `mkdir spec/e2e`
+    - `touch spec/e2e/hello.spec.ts`
+    ```
+    // frontend/e2e/hello.spec.ts
+
+    import { test, expect } from '@playwright/test';
+
+    test('frontend and backend are working', async ({ page }) => {
+      // Navigate to the frontend URL
+      await page.goto('/');
+
+      // Verify the frontend message
+      await expect(page.locator('[data-testid="frontend-message"]')).toHaveText('Hello from Nuxt!');
+
+      // Verify the backend message
+      await expect(page.locator('[data-testid="backend-message"]')).toHaveText('Hello from Rails!');
+    });
+    ```
+4. Now run Playwright locally:
+    - `npx playwright test`
 
 
 
