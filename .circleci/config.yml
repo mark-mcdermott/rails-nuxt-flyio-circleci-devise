@@ -82,7 +82,7 @@ jobs:
           name: Run Vitest Tests
           command: |
             cd frontend
-            npm run test
+            npx vitest
 
 workflows:
   version: 2
