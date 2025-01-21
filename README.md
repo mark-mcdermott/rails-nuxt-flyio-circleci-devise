@@ -433,6 +433,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `cd frontend`
     - `npm install -D vitest @vue/test-utils jsdom`
 2. Now let's add a `vitest.config.ts` file, which is where our Vitest configurations are:
+    - `touch vitest.config.ts`
     ```
     /// frontend/vitest.config.ts
 
@@ -477,5 +478,5 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
       })
     })
     ```
-5. Run Vitest locally:
+4. Run Vitest locally:
     - `npx vitest`
