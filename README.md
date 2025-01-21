@@ -490,7 +490,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
           - `docker-compose exec frontend npx vitest` (2 tests should pass)
 
 ## Vitest CircleCI
-    - Let's change our `.circleci/config.yml` to this:
+1. Let's change our `.circleci/config.yml` to this:
     ```
     version: 2.1
 
@@ -576,7 +576,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
               name: Run Vitest Tests
               command: |
                 cd frontend
-                npm run test
+                npx vitest
 
     workflows:
       version: 2
@@ -585,6 +585,13 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
           - test_backend
           - test_frontend
     ```
+2. Let's commit these changes and push them:
+    - `git add .`
+    - `git commit -m "Add Vitest"`
+    - `git push`
+    - Then the tests will start on CircleCI
+    - Both `test_frontend` (Vitest) and `test_backend` (RSpec) should pass
+
 
 
 
