@@ -24,8 +24,19 @@ services:
     volumes:
       - ./backend:/app/backend
     working_dir: /app/backend
-    command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && bundle exec rails db:setup && bundle exec rspec"
+    command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && tail -f /dev/null"
+    depends_on:
+      db:
+        condition: service_healthy
 
+  frontend:
+    image: node:18-alpine
+    environment:
+      NODE_ENV: test
+    volumes:
+      - ./frontend:/app/frontend
+    working_dir: /app/frontend
+    command: sh -c "npm install && tail -f /dev/null"
     depends_on:
       db:
         condition: service_healthy
