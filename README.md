@@ -429,3 +429,78 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
 
 ## Vitest (Local)
+1. Let's install Vitest:
+    - `cd frontend`
+    - `npm install -D vitest @vue/test-utils jsdom`
+2. Now let's add a `vitest.config.ts` file, which is where our Vitest configurations are:
+    ```
+    /// frontend/vitest.config.ts
+
+    import { defineConfig } from 'vitest/config';
+    import vue from '@vitejs/plugin-vue';
+
+    export default defineConfig({
+      plugins: [vue()],
+      test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: './test/setup.ts',
+        coverage: {
+          provider: 'istanbul',
+          reporter: ['text', 'html'],
+        },
+      },
+    });
+    ```
+3. Now we create our `spec` folder and create our test configuration file with our mocks
+    - `mkdir spec`
+    - `touch spec/setup.ts`
+    ```
+    /// frontend/test/setup.ts
+
+    import { beforeEach } from 'vitest';
+    import { config } from '@vue/test-utils';
+
+    // Mock any global configurations for Vue Test Utils
+    beforeEach(() => {
+      // Clear all mocks between tests
+      vi.resetAllMocks();
+    });
+
+    // Example: Mock useRuntimeConfig if needed
+    vi.mock('#app', () => ({
+      useRuntimeConfig: () => ({
+        public: { apiURL: 'http://mocked-backend/api/v1' },
+      }),
+    }));
+    ```
+4. Here is our actual component test:
+    - `mkdir spec/components`
+    - `touch spec/components/Hello.spec.ts`
+    ```
+    /// frontend/test/components/Hello.spec.ts
+
+    import { mount } from '@vue/test-utils';
+    import { describe, it, expect, vi } from 'vitest';
+    import Hello from '@/components/Hello.vue';
+
+    // Mock the fetch API
+    global.fetch = vi.fn(async () => ({
+      json: async () => ({ message: 'Mocked Hello from Rails!' }),
+    }));
+
+    describe('Hello.vue', () => {
+      it('renders both frontend and backend messages', async () => {
+        const wrapper = mount(Hello);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(wrapper.find('[data-testid="backend-message"]').text()).toBe(
+          'Mocked Hello from Rails!'
+        );
+        expect(wrapper.find('[data-testid="frontend-message"]').text()).toBe(
+          'Hello from Nuxt!'
+        );
+      });
+    });
+    ```
+5. Run Vitest locally:
+    - `npx vitest`
