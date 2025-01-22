@@ -484,6 +484,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 
 ## Vitest Docker
 1. Run the following commands:
+  - `cd ..`
   - `docker-compose down --volumes --remove-orphans`
   - `docker-compose up`
 2. When the above command finishes, leave that terminal pane open and open a second terminal pane:
