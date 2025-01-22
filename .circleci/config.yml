@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  test:
+  test_backend:
     docker:
       - image: ruby:3.3.7-bullseye
         environment:
@@ -16,11 +16,12 @@ jobs:
           POSTGRES_PASSWORD: yourpassword
     steps:
       - checkout
+      
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
-            - v1-dependencies-
-      
+            - v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+            - v1-backend-dependencies-
+
       - run:
           name: Install System Dependencies
           command: |
@@ -41,7 +42,7 @@ jobs:
       - save_cache:
           paths:
             - backend/vendor/bundle
-          key: v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
+          key: v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
 
       - run:
           name: Setup Database
@@ -55,8 +56,37 @@ jobs:
             cd backend
             bundle exec rspec
 
+  test_frontend:
+    docker:
+      - image: node:18
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+            - v1-frontend-dependencies-
+
+      - run:
+          name: Install Node.js Dependencies
+          command: |
+            cd frontend
+            npm ci
+
+      - save_cache:
+          paths:
+            - frontend/node_modules
+          key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+
+      - run:
+          name: Run Vitest Tests
+          command: |
+            cd frontend
+            npx vitest
+
 workflows:
   version: 2
   test:
     jobs:
-      - test
+      - test_backend
+      - test_frontend
