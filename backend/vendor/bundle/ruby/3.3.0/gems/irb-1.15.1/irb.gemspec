@@ -18,11 +18,10 @@ Gem::Specification.new do |spec|
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["documentation_uri"] = spec.homepage
+  spec.metadata["documentation_uri"] = "https://ruby.github.io/irb/"
   spec.metadata["changelog_uri"] = "#{spec.homepage}/releases"
 
   spec.files         = [
-    ".document",
     "Gemfile",
     "LICENSE.txt",
     "README.md",
@@ -43,4 +42,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "reline", ">= 0.4.2"
   spec.add_dependency "rdoc", ">= 4.0.0"
+  spec.add_dependency "pp", ">= 0.6.0"
 end

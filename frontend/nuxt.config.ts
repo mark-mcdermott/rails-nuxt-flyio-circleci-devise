@@ -5,5 +5,5 @@ export default defineNuxtConfig({
   runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1'}},
   $production: { runtimeConfig: { public: { apiURL: 'https://app001-backend.fly.dev/api/v1' }}},
   devtools: { enabled: false },
-  modules: ['@nuxt/test-utils/module']
+  compatibilityDate: '2025-01-22',
 })
