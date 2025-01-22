@@ -483,11 +483,11 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `npx vitest` (it should say 2 tests passed)
 
 ## Vitest Docker
-    - `docker-compose down --volumes --remove-orphans`
-    - `docker-compose up`
-      - When the above command finshes, leave that terminal pane open and open a second
-        - In the second terminal pane:
-          - `docker-compose exec frontend npx vitest` (2 tests should pass)
+1. Run the following commands:
+  - `docker-compose down --volumes --remove-orphans`
+  - `docker-compose up`
+2. When the above command finishes, leave that terminal pane open and open a second terminal pane:
+  - `docker-compose exec frontend npx vitest` (2 tests should pass)
 
 ## Vitest CircleCI
 1. Let's change our `.circleci/config.yml` to this:
