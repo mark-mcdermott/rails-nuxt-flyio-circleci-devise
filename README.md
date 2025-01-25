@@ -606,7 +606,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     import { defineConfig } from '@playwright/test';
 
     export default defineConfig({
-      testDir: './e2e',
+      testDir: './spec/e2e',
       use: {
         baseURL: 'http://localhost:3001',
         browserName: 'chromium',
