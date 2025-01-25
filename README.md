@@ -713,4 +713,4 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 
 
 
-`docker-compose exec frontend npx playwright test`
+`docker-compose exec frontend npx playwright test spec/e2e`
