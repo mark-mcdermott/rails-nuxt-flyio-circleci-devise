@@ -480,7 +480,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     })
     ```
 4. Run Vitest locally:
-    - `npx vitest` (it should say 2 tests passed)
+    - `npx vitest run spec/components` (it should say 2 tests passed)
 
 ## Vitest Docker
 1. Run the following commands:
@@ -644,6 +644,71 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - In another terminal pane in the frontend directory, run `npx playwright test` (1 test should pass)
     - Stop the first two terminal panes with control + c.
 
+## Playwright Docker
+1. First let's change the `docker-compose.yml` file to:
+    ```
+    # docker-compose.yml
+
+    services:
+      db:
+        image: postgres:13.4
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: backend_test
+          POSTGRES_PASSWORD: yourpassword  # Replace with a strong password
+        ports:
+          - "5432:5432"
+        volumes:
+          - db_data:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U postgres"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+
+      backend:
+        image: ruby:3.3.7-bullseye
+        environment:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+          DB_HOST: db
+        volumes:
+          - ./backend:/app/backend
+        working_dir: /app/backend
+        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && tail -f /dev/null"
+        depends_on:
+          db:
+            condition: service_healthy
+
+      frontend:
+        image: node:18-alpine
+        environment:
+          NODE_ENV: test
+        volumes:
+          - ./frontend:/app/frontend
+        working_dir: /app/frontend
+        command: sh -c "npm install && tail -f /dev/null"
+        depends_on:
+          db:
+            condition: service_healthy
+
+      playwright:
+        image: mcr.microsoft.com/playwright:focal
+        environment:
+          BASE_URL: http://frontend:3001
+        volumes:
+          - ./frontend:/app/frontend
+        working_dir: /app/frontend
+        command: sh -c "npm ci && npx playwright install --with-deps && npx playwright test"
+        depends_on:
+          frontend:
+            condition: service_healthy
+          backend:
+            condition: service_healthy
+
+    volumes:
+      db_data:
+    ```
 
 
 
