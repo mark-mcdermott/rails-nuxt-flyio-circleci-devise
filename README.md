@@ -641,7 +641,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 4. Now run Playwright locally:
     - In a terminal pane in the backend directory, run `rails server`
     - In a terminal pane in the frontend directory, run `npm run dev`
-    - In another terminal pane in the frontend directory, run `npx playwright test` (1 test should pass)
+    - In another terminal pane in the frontend directory, run `npx playwright test spec/e2e` (1 test should pass)
     - Stop the first two terminal panes with control + c.
 
 ## Playwright Docker
