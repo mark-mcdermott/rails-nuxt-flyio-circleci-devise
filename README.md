@@ -648,4 +648,136 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 I was unable to get playwright working on docker on my computer. I ran into issues with ARM64 incompatability with the appropriate Docker images and wasn't able to figure out a way around them. So we'll skip this part.
 
 ## Playwright On CircleCI
-1. 
+1. From the root directory of our app, let's change our `docker-compose.yml` to include a Playwright section:
+    ```
+    jobs:
+      test_backend:
+        docker:
+          - image: ruby:3.3.7-bullseye
+            environment:
+              RAILS_ENV: test
+              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+              DB_HOST: db
+          - image: postgres:13.4
+            name: db
+            environment:
+              POSTGRES_USER: postgres
+              POSTGRES_DB: backend_test
+              POSTGRES_PASSWORD: yourpassword
+        steps:
+          - checkout
+
+          - restore_cache:
+              keys:
+                - v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+                - v1-backend-dependencies-
+
+          - run:
+              name: Install System Dependencies
+              command: |
+                apt-get update
+                apt-get install -y build-essential libpq-dev
+
+          - run:
+              name: Install Bundler
+              command: gem install bundler
+
+          - run:
+              name: Install Gems
+              command: |
+                cd backend
+                bundle config set path 'vendor/bundle'
+                bundle install --jobs=4 --retry=3
+
+          - save_cache:
+              paths:
+                - backend/vendor/bundle
+              key: v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+
+          - run:
+              name: Setup Database
+              command: |
+                cd backend
+                bundle exec rails db:setup
+
+          - run:
+              name: Run RSpec Tests
+              command: |
+                cd backend
+                bundle exec rspec
+
+      test_frontend:
+        docker:
+          - image: node:18
+        steps:
+          - checkout
+
+          - restore_cache:
+              keys:
+                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+                - v1-frontend-dependencies-
+
+          - run:
+              name: Install Node.js Dependencies
+              command: |
+                cd frontend
+                npm ci
+
+          - save_cache:
+              paths:
+                - frontend/node_modules
+              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+
+          - run:
+              name: Run Vitest Tests
+              command: |
+                cd frontend
+                npx vitest
+
+      test_playwright:
+        docker:
+          - image: mcr.microsoft.com/playwright:latest
+        steps:
+          - checkout
+
+          - restore_cache:
+              keys:
+                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+                - v1-frontend-dependencies-
+
+          - run:
+              name: Install Node.js Dependencies
+              command: |
+                cd frontend
+                npm ci
+
+          - save_cache:
+              paths:
+                - frontend/node_modules
+              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+
+          - run:
+              name: Start Backend Server
+              command: |
+                cd backend
+                rails server -p 3000 &
+
+          - run:
+              name: Start Playwright Tests
+              command: |
+                cd frontend
+                npx playwright test
+
+    workflows:
+      version: 2
+      test:
+        jobs:
+          - test_backend
+          - test_frontend
+          - test_playwright
+    ```
+2. Let's commit these changes, push them up and run Playwright on CircleCI:
+    - `git add .`
+    - `git commit -m "Add Playwright"`
+    - `git push`
+    - That should start the tests running and now RSpec, Vitest and Playwright should all pass and show green.
