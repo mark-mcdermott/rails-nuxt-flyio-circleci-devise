@@ -296,7 +296,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
           timeout: 5s
           retries: 5
 
-      ruby:
+      backend:
         image: ruby:3.3.7-bullseye
         environment:
           RAILS_ENV: test
@@ -340,8 +340,8 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `docker-compose up`
     - When the above command finshes, leave that terminal pane open and open a second
       - In the second terminal pane:
-        - `docker-compose exec ruby bundle install`
-        - `docker-compose exec ruby bundle exec rspec` (1 test should pass)
+        - `docker-compose exec backend bundle install`
+        - `docker-compose exec backend bundle exec rspec` (1 test should pass)
       
 4. Make sure RSpec still works locally:
     - `cd backend`
@@ -488,7 +488,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
   - `docker-compose down --volumes --remove-orphans`
   - `docker-compose up`
 2. When the above command finishes, leave that terminal pane open and open a second terminal pane:
-  - `docker-compose exec frontend npx vitest` (2 tests should pass)
+  - `docker-compose exec frontend npx vitest run spec/components` (2 tests should pass)
 
 ## Vitest CircleCI
 1. Let's change our `.circleci/config.yml` to this:
