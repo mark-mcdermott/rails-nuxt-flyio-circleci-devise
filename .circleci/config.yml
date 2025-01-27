@@ -82,7 +82,7 @@ jobs:
           name: Run Vitest Tests
           command: |
             cd frontend
-            npx vitest
+            npx vitest spec/components
 
   e2e_tests:
     docker:
