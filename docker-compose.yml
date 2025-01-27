@@ -82,6 +82,7 @@ jobs:
             cd frontend
             npx vitest run spec/components
 
+  test_playwright:
     docker:
       - image: mcr.microsoft.com/playwright:latest
     steps:
@@ -113,7 +114,7 @@ jobs:
           name: Start Playwright Tests
           command: |
             cd frontend
-            npx playwright test spec/e2e 
+            npx playwright test spec/e2e
 
 workflows:
   version: 2
