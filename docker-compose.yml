@@ -1,5 +1,5 @@
 jobs:
-  test_backend:
+  backend_unit_tests:
     docker:
       - image: ruby:3.3.7-bullseye
         environment:
@@ -54,7 +54,7 @@ jobs:
             cd backend
             bundle exec rspec
 
-  test_frontend:
+  frontend_unit_tests:
     docker:
       - image: node:18
     steps:
@@ -82,7 +82,7 @@ jobs:
             cd frontend
             npx vitest run spec/components 
 
-  test_playwright:
+  e2e_tests:
     docker:
       - image: mcr.microsoft.com/playwright:latest
     steps:
@@ -120,6 +120,9 @@ workflows:
   version: 2
   test:
     jobs:
-      - test_backend
-      - test_frontend
-      - test_playwright
+      - backend_unit_tests
+      - frontend_unit_tests
+      - e2e_tests:
+        - requires:
+          - backend_unit_tests
+          - frontend_unit_tests
