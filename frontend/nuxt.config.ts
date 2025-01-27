@@ -6,4 +6,5 @@ export default defineNuxtConfig({
   $production: { runtimeConfig: { public: { apiURL: 'https://app001-backend.fly.dev/api/v1' }}},
   devtools: { enabled: false },
   compatibilityDate: '2025-01-26',
+  modules: ['@nuxt/test-utils/module']
 })
