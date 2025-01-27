@@ -125,6 +125,6 @@ workflows:
       - backend_unit_tests
       - frontend_unit_tests
       - e2e_tests:
-        requires:
-          - backend_unit_tests
-          - frontend_unit_tests
+          requires:
+            - backend_unit_tests
+            - frontend_unit_tests
