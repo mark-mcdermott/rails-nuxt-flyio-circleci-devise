@@ -450,7 +450,12 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     /// frontend/vitest.config.ts
 
     import { defineVitestConfig } from '@nuxt/test-utils/config'
-    export default defineVitestConfig({})
+    export default defineVitestConfig({
+      test: {
+        include: ['spec/components/**/*.spec.ts'], // Only component tests
+        exclude: ['spec/e2e/**/*'], // Exclude e2e tests
+      },
+    })
     ```
 3. Here is our actual component test:
     - `mkdir -p spec/components`
