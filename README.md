@@ -577,7 +577,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
               name: Run Vitest Tests
               command: |
                 cd frontend
-                npx vitest
+                npx vitest run spec/components
 
     workflows:
       version: 2
@@ -732,7 +732,7 @@ I was unable to get playwright working on docker on my computer. I ran into issu
               name: Run Vitest Tests
               command: |
                 cd frontend
-                npx vitest
+                npx vitest run spec/components
 
       test_playwright:
         docker:
@@ -766,7 +766,7 @@ I was unable to get playwright working on docker on my computer. I ran into issu
               name: Start Playwright Tests
               command: |
                 cd frontend
-                npx playwright test
+                npx playwright test spec/e2e 
 
     workflows:
       version: 2
