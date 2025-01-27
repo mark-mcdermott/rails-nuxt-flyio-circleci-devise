@@ -15,7 +15,7 @@ services:
       timeout: 5s
       retries: 5
 
-  ruby:
+  backend:
     image: ruby:3.3.7-bullseye
     environment:
       RAILS_ENV: test

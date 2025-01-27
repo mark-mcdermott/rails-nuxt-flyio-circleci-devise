@@ -3,13 +3,10 @@ current directory: /app/backend/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0
 creating Makefile
 
 current directory: /app/backend/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.7.7/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20250122-9-3m87g1 sitelibdir\=./.gem.20250122-9-3m87g1 clean
-make: Warning: File 'Makefile' has modification time 0.0097 s in the future
-make: warning:  Clock skew detected.  Your build may be incomplete.
+make DESTDIR\= sitearchdir\=./.gem.20250127-9-2kalds sitelibdir\=./.gem.20250127-9-2kalds clean
 
 current directory: /app/backend/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.7.7/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20250122-9-3m87g1 sitelibdir\=./.gem.20250122-9-3m87g1
-make: Warning: File 'Makefile' has modification time 0.0027 s in the future
+make DESTDIR\= sitearchdir\=./.gem.20250127-9-2kalds sitelibdir\=./.gem.20250127-9-2kalds
 compiling websocket_mask.c
 websocket_mask.c: In function ‘Init_websocket_mask’:
 websocket_mask.c:26:6: warning: old-style function definition [-Wold-style-definition]
@@ -20,13 +17,10 @@ cc1: note: unrecognized command-line option ‘-Wno-self-assign’ may have been
 cc1: note: unrecognized command-line option ‘-Wno-parentheses-equality’ may have been intended to silence earlier diagnostics
 cc1: note: unrecognized command-line option ‘-Wno-constant-logical-operand’ may have been intended to silence earlier diagnostics
 linking shared-object websocket_mask.so
-make: warning:  Clock skew detected.  Your build may be incomplete.
 
 current directory: /app/backend/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.7.7/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20250122-9-3m87g1 sitelibdir\=./.gem.20250122-9-3m87g1 install
-make: Warning: File 'websocket_mask.so' has modification time 0.0086 s in the future
-/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20250122-9-3m87g1
-make: warning:  Clock skew detected.  Your build may be incomplete.
+make DESTDIR\= sitearchdir\=./.gem.20250127-9-2kalds sitelibdir\=./.gem.20250127-9-2kalds install
+/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20250127-9-2kalds
 
 current directory: /app/backend/vendor/bundle/ruby/3.3.0/gems/websocket-driver-0.7.7/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20250122-9-3m87g1 sitelibdir\=./.gem.20250122-9-3m87g1 clean
+make DESTDIR\= sitearchdir\=./.gem.20250127-9-2kalds sitelibdir\=./.gem.20250127-9-2kalds clean
