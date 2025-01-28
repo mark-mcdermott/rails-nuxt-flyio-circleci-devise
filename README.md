@@ -241,201 +241,6 @@
     - In the console, there should be no 404 errors
 6. `cd ..` into the app's root directory
 
-# RSpec (Local)
-Here we'll create a simple RSpec test for the Rails HelloController. Then we'll verify it passes when running locally.
-1. Install RSpec:
-    - `cd backend`
-    - `bundle add rspec-rails --group "development, test"`
-    - `rails generate rspec:install`
-2. Create a HelloController test:
-    - `mkdir -p spec/requests/api/v1`
-    - `touch spec/requests/api/v1/hello_spec.rb`
-    ```
-    # backend/spec/requests/api/v1/hello_spec.rb
-
-    # frozen_string_literal: true
-
-    require 'rails_helper'
-
-    RSpec.describe "Api::V1::Hello", type: :request do
-      describe "GET /api/v1/hello" do
-        it "returns a JSON message from the hello controller" do
-          get "/api/v1/hello"
-          expect(response).to have_http_status(:ok)
-
-          json_body = JSON.parse(response.body)
-          expect(json_body["message"]).to eq("Hello from Rails!")
-        end
-      end
-    end
-    ```
-3. Run RSpec locally:
-    - `rspec` (1 test should run and pass)
-4. Let's redeploy our backend now
-    - `fly deploy`
-5. `cd ..`
-
-# RSpec On Local Docker
-1. In the root directory of our app, let's create a `docker-compose.yml`:
-    - `touch docker-compose.yml`
-    ```
-    services:
-      db:
-        image: postgres:13.4
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: backend_test
-          POSTGRES_PASSWORD: yourpassword  # Replace with a strong password
-        ports:
-          - "5432:5432"
-        volumes:
-          - db_data:/var/lib/postgresql/data
-        healthcheck:
-          test: ["CMD-SHELL", "pg_isready -U postgres"]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-
-      backend:
-        image: ruby:3.3.7-bullseye
-        environment:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
-          DB_HOST: db
-        volumes:
-          - ./backend:/app/backend
-        working_dir: /app/backend
-        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && tail -f /dev/null"
-        depends_on:
-          db:
-            condition: service_healthy
-
-      frontend:
-        image: node:18-alpine
-        environment:
-          NODE_ENV: test
-        volumes:
-          - ./frontend:/app/frontend
-        working_dir: /app/frontend
-        command: sh -c "npm install && tail -f /dev/null"
-        depends_on:
-          db:
-            condition: service_healthy
-
-    volumes:
-      db_data:
-    ```
-2. In `backend/config/database.yml`, change the default setting to:
-    ```
-    default: &default
-      adapter: postgresql
-      encoding: unicode
-      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-      username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
-      password: <%= ENV.fetch("DB_PASSWORD", "yourpassword") %>
-      host: <%= ENV.fetch("DB_HOST", "localhost") %>
-    ```
-3. Run RSpec locally on Docker:
-    - `docker-compose down --volumes --remove-orphans`
-    - `docker-compose up`
-    - When the above command finshes, leave that terminal pane open and open a second
-      - In the second terminal pane:
-        - `docker-compose exec backend bundle install`
-        - `docker-compose exec backend bundle exec rspec` (1 test should pass)
-      
-4. Make sure RSpec still works locally:
-    - `cd backend`
-    - `rspec` (you should see `1 example, 0 failures` here, too)
-    - `cd ..`
-
-## RSpec On CircleCI
-1. Let's create a `.circleci/config.yml` file, the file CircleCI uses for our CI/CD configuration:
-    - `mkdir .circleci`
-    - `touch .circleci/config.yml`
-    ```
-    version: 2.1
-
-    jobs:
-      test:
-        docker:
-          - image: ruby:3.3.7-bullseye
-            environment:
-              RAILS_ENV: test
-              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
-              DB_HOST: db
-          - image: postgres:13.4
-            name: db
-            environment:
-              POSTGRES_USER: postgres
-              POSTGRES_DB: backend_test
-              POSTGRES_PASSWORD: yourpassword
-        steps:
-          - checkout
-          - restore_cache:
-              keys:
-                - v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
-                - v1-dependencies-
-          
-          - run:
-              name: Install System Dependencies
-              command: |
-                apt-get update
-                apt-get install -y build-essential libpq-dev
-
-          - run:
-              name: Install Bundler
-              command: gem install bundler
-
-          - run:
-              name: Install Gems
-              command: |
-                cd backend
-                bundle config set path 'vendor/bundle'
-                bundle install --jobs=4 --retry=3
-
-          - save_cache:
-              paths:
-                - backend/vendor/bundle
-              key: v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
-
-          - run:
-              name: Setup Database
-              command: |
-                cd backend
-                bundle exec rails db:setup
-
-          - run:
-              name: Run RSpec Tests
-              command: |
-                cd backend
-                bundle exec rspec
-
-    workflows:
-      version: 2
-      test:
-        jobs:
-          - test
-    ```
-2. You'll need to deploy the whole app to github.
-    - `git add .`
-    - `git commit -m "Add app"`
-    - Create a new public repo in the github UI
-    - `git branch -M main`
-    - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
-    - `git remote add origin <repo web url>`
-    - `git push -u origin main`
-3. Configure CircleCI for the new repo
-    - Login to CircleCI
-    - Click the "Go to application" button
-    - Click "Projects" in the left sidebar
-    - Find your new repo in the Project list
-    - In your repo's project row, click "Set up Project" towards the right.
-    - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
-    - In the "From which branch" field under "Fastest", type `main`
-    - Click the "Set up Project" button on the modal.
-    - This will take you to your new repo's "Pipeline" and a run will have started
-    - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
-
 ## Vitest (Local)
 1. Let's install Vitest:
     - `cd frontend`
@@ -786,3 +591,198 @@ I was unable to get playwright working on docker on my computer. I ran into issu
     - `git commit -m "Add Playwright"`
     - `git push`
     - That should start the tests running and now RSpec, Vitest and Playwright should all pass and show green.
+
+# RSpec (Local)
+Here we'll create a simple RSpec test for the Rails HelloController. Then we'll verify it passes when running locally.
+1. Install RSpec:
+    - `cd backend`
+    - `bundle add rspec-rails --group "development, test"`
+    - `rails generate rspec:install`
+2. Create a HelloController test:
+    - `mkdir -p spec/requests/api/v1`
+    - `touch spec/requests/api/v1/hello_spec.rb`
+    ```
+    # backend/spec/requests/api/v1/hello_spec.rb
+
+    # frozen_string_literal: true
+
+    require 'rails_helper'
+
+    RSpec.describe "Api::V1::Hello", type: :request do
+      describe "GET /api/v1/hello" do
+        it "returns a JSON message from the hello controller" do
+          get "/api/v1/hello"
+          expect(response).to have_http_status(:ok)
+
+          json_body = JSON.parse(response.body)
+          expect(json_body["message"]).to eq("Hello from Rails!")
+        end
+      end
+    end
+    ```
+3. Run RSpec locally:
+    - `rspec` (1 test should run and pass)
+4. Let's redeploy our backend now
+    - `fly deploy`
+5. `cd ..`
+
+# RSpec On Local Docker
+1. In the root directory of our app, let's create a `docker-compose.yml`:
+    - `touch docker-compose.yml`
+    ```
+    services:
+      db:
+        image: postgres:13.4
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: backend_test
+          POSTGRES_PASSWORD: yourpassword  # Replace with a strong password
+        ports:
+          - "5432:5432"
+        volumes:
+          - db_data:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U postgres"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+
+      backend:
+        image: ruby:3.3.7-bullseye
+        environment:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+          DB_HOST: db
+        volumes:
+          - ./backend:/app/backend
+        working_dir: /app/backend
+        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && tail -f /dev/null"
+        depends_on:
+          db:
+            condition: service_healthy
+
+      frontend:
+        image: node:18-alpine
+        environment:
+          NODE_ENV: test
+        volumes:
+          - ./frontend:/app/frontend
+        working_dir: /app/frontend
+        command: sh -c "npm install && tail -f /dev/null"
+        depends_on:
+          db:
+            condition: service_healthy
+
+    volumes:
+      db_data:
+    ```
+2. In `backend/config/database.yml`, change the default setting to:
+    ```
+    default: &default
+      adapter: postgresql
+      encoding: unicode
+      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+      username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
+      password: <%= ENV.fetch("DB_PASSWORD", "yourpassword") %>
+      host: <%= ENV.fetch("DB_HOST", "localhost") %>
+    ```
+3. Run RSpec locally on Docker:
+    - `docker-compose down --volumes --remove-orphans`
+    - `docker-compose up`
+    - When the above command finshes, leave that terminal pane open and open a second
+      - In the second terminal pane:
+        - `docker-compose exec backend bundle install`
+        - `docker-compose exec backend bundle exec rspec` (1 test should pass)
+      
+4. Make sure RSpec still works locally:
+    - `cd backend`
+    - `rspec` (you should see `1 example, 0 failures` here, too)
+    - `cd ..`
+
+## RSpec On CircleCI
+1. Let's create a `.circleci/config.yml` file, the file CircleCI uses for our CI/CD configuration:
+    - `mkdir .circleci`
+    - `touch .circleci/config.yml`
+    ```
+    version: 2.1
+
+    jobs:
+      test:
+        docker:
+          - image: ruby:3.3.7-bullseye
+            environment:
+              RAILS_ENV: test
+              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+              DB_HOST: db
+          - image: postgres:13.4
+            name: db
+            environment:
+              POSTGRES_USER: postgres
+              POSTGRES_DB: backend_test
+              POSTGRES_PASSWORD: yourpassword
+        steps:
+          - checkout
+          - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
+                - v1-dependencies-
+          
+          - run:
+              name: Install System Dependencies
+              command: |
+                apt-get update
+                apt-get install -y build-essential libpq-dev
+
+          - run:
+              name: Install Bundler
+              command: gem install bundler
+
+          - run:
+              name: Install Gems
+              command: |
+                cd backend
+                bundle config set path 'vendor/bundle'
+                bundle install --jobs=4 --retry=3
+
+          - save_cache:
+              paths:
+                - backend/vendor/bundle
+              key: v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
+
+          - run:
+              name: Setup Database
+              command: |
+                cd backend
+                bundle exec rails db:setup
+
+          - run:
+              name: Run RSpec Tests
+              command: |
+                cd backend
+                bundle exec rspec
+
+    workflows:
+      version: 2
+      test:
+        jobs:
+          - test
+    ```
+2. You'll need to deploy the whole app to github.
+    - `git add .`
+    - `git commit -m "Add app"`
+    - Create a new public repo in the github UI
+    - `git branch -M main`
+    - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
+    - `git remote add origin <repo web url>`
+    - `git push -u origin main`
+3. Configure CircleCI for the new repo
+    - Login to CircleCI
+    - Click the "Go to application" button
+    - Click "Projects" in the left sidebar
+    - Find your new repo in the Project list
+    - In your repo's project row, click "Set up Project" towards the right.
+    - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
+    - In the "From which branch" field under "Fastest", type `main`
+    - Click the "Set up Project" button on the modal.
+    - This will take you to your new repo's "Pipeline" and a run will have started
+    - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
