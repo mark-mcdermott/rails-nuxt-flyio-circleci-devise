@@ -6,10 +6,8 @@
     - `cd app`
 2. Initialize git repo:
     - `git init` (hit enter for all prompts)
-    - `touch .gitignore`
 3. Let's create some blank files for app secrets (like the PostgreSQL connection details) and for non-secret app info.
-    - `touch .secrets`
-    - `touch .appinfo`
+    - `touch .gitignore .secrets .appinfo`
 4. Let's add `.secrets` and `.appinfo` to our `.gitignore`:
     - `.gitignore`
     ```
@@ -31,18 +29,6 @@
       - choose `npm` for package manager
       - choose `no` for initialize git repository
     - `cd frontend`
-2. Let's setup our frontend app configuration.
-    - `frontend/nuxt.config.ts` (make sure to replace `<...>` with your app backend name)
-    ```
-    // nuxt.config.ts
-
-    export default defineNuxtConfig({
-      server: { port: 3001, host: '0.0.0.0' },
-      runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1'}},
-      $production: { runtimeConfig: { public: { apiURL: 'https://<app backend name>.fly.dev/api/v1' }}},
-      devtools: { enabled: false },
-    })
-    ```
 3. Create a simple component and use it in `app.vue`:
     - `mkdir components`
     - `touch components/Hello.vue`
@@ -74,7 +60,46 @@
       <Hello />
     </template>
     ```
-4. Change directory to the app's root directory:
+
+### Setup Vitest
+
+
+## Setup Frontend To Talk To Backend
+4. Let's configure out `nuxt.config.ts` to talk to the backend:
+    - `frontend/nuxt.config.ts` (make sure to replace `<...>` with your app backend name)
+    ```
+    // nuxt.config.ts
+
+    export default defineNuxtConfig({
+      server: { port: 3001, host: '0.0.0.0' },
+      runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1'}},
+      $production: { runtimeConfig: { public: { apiURL: 'https://<app backend name>.fly.dev/api/v1' }}},
+      devtools: { enabled: false },
+    })
+    ```
+5. Let's make our component talk to the backend as well:
+    ```
+    <!--- frontend/components/Hello.vue -->
+    
+    <template>
+      <p data-testid="backend-message">{{ message }}</p>
+      <p data-testid="frontend-message">Hello from Nuxt!</p>
+    </template>
+
+    <script setup>
+    import { ref, onMounted } from 'vue';
+
+    const runtimeConfig = useRuntimeConfig()
+    const message = ref('');
+
+    onMounted(async () => {
+      const response = await fetch(`${runtimeConfig.public.apiURL}/hello`);
+      const data = await response.json();
+      message.value = data.message;
+    });
+    </script>
+    ```
+6. Change directory to the app's root directory:
     - `cd ..`
 
 ## Local Backend Setup (Rails)
