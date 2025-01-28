@@ -121,7 +121,9 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
         command: npx vitest spec/components
         working_dir: /app
     ```
-2. Let's change our `.circleci/config.yml` to this:
+2. Let's create a `.circleci/config.yml`, the config file for CircleCI:
+    - `mkdir .circleci`
+    - `touch .circleci/config.yml`
     ```
     version: 2.1
 
