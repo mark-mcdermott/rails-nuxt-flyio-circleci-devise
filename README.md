@@ -439,7 +439,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 ## Vitest (Local)
 1. Let's install Vitest:
     - `cd frontend`
-    - `npm install -D vitest @vue/test-utils @nuxt/test-utils happy-dom`
+    - `npm install -D vitest @vitejs/plugin-vue @vue/test-utils @nuxt/test-utils happy-dom`
 2. Add this line to `nuxt.config.ts` inside the `defineNuxtConfig` area:
     ```
     modules: ['@nuxt/test-utils/module']
