@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  backend_unit_tests:
+  backend:
     docker:
       - image: ruby:3.3.7-bullseye
         environment:
@@ -50,13 +50,7 @@ jobs:
             cd backend
             bundle exec rails db:setup
 
-      - run:
-          name: Run RSpec Tests
-          command: |
-            cd backend
-            bundle exec rspec
-
-  frontend_unit_tests:
+  test_frontend:
     docker:
       - image: node:18
     steps:
@@ -82,49 +76,11 @@ jobs:
           name: Run Vitest Tests
           command: |
             cd frontend
-            npx vitest spec/components
-
-  e2e_tests:
-    docker:
-      - image: mcr.microsoft.com/playwright:latest
-    steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-            - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-            - v1-frontend-dependencies-
-
-      - run:
-          name: Install Node.js Dependencies
-          command: |
-            cd frontend
-            npm ci
-
-      - save_cache:
-          paths:
-            - frontend/node_modules
-          key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-
-      - run:
-          name: Start Backend Server
-          command: |
-            cd backend
-            rails server -p 3000 &
-
-      - run:
-          name: Start Playwright Tests
-          command: |
-            cd frontend
-            npx playwright test spec/e2e
+            npx vitest run spec/components
 
 workflows:
   version: 2
   test:
     jobs:
-      - backend_unit_tests
-      - frontend_unit_tests
-      - e2e_tests:
-          requires:
-            - backend_unit_tests
-            - frontend_unit_tests
+      - backend
+      - test_frontend

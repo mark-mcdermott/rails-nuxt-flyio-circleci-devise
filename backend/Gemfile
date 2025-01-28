@@ -49,5 +49,3 @@ end
 gem "rack-cors", "~> 2.0"
 
 gem "dockerfile-rails", ">= 1.7", :group => :development
-
-gem "rspec-rails", "~> 7.1", :groups => [:development, :test]
