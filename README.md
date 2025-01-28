@@ -34,24 +34,10 @@
     - `touch components/Hello.vue`
     ```
     <!--- frontend/components/Hello.vue -->
-    
+
     <template>
-      <p data-testid="backend-message">{{ message }}</p>
       <p data-testid="frontend-message">Hello from Nuxt!</p>
     </template>
-
-    <script setup>
-    import { ref, onMounted } from 'vue';
-
-    const runtimeConfig = useRuntimeConfig()
-    const message = ref('');
-
-    onMounted(async () => {
-      const response = await fetch(`${runtimeConfig.public.apiURL}/hello`);
-      const data = await response.json();
-      message.value = data.message;
-    });
-    </script>
     ```
     - `app.vue`
     ```
@@ -61,23 +47,125 @@
     </template>
     ```
 
-### Setup Vitest
+### Vitest (Local)
+We'll setup Vitest here for component tests.
+1. Install Vitest and testing dependencies:
+    - `npm i --save-dev @nuxt/test-utils vitest @vue/test-utils happy-dom playwright-core`
+2. Change your `nuxt.config.ts` to this:
+    ```
+    // frontend/nuxt.config.ts
 
+    export default defineNuxtConfig({
+      modules: ['@nuxt/test-utils/module']
+    })
+    ```
+3. Create a `vitest.config.ts`:
+    - `touch vitest.config.ts`
+    ```
+    // frontend/vitest.config.ts
 
-## Setup Frontend To Talk To Backend
-4. Let's configure out `nuxt.config.ts` to talk to the backend:
+    import { defineVitestConfig } from '@nuxt/test-utils/config'
+
+    export default defineVitestConfig({ })
+    ```
+4. Let's create our test directory and test file:
+    - `mkdir -p spec/components`
+    - `touch spec/components/hello.nuxt.spec.ts`
+    ```
+    // frontend/spec/components/hello.nuxt.spec.ts
+
+    import { it, expect } from 'vitest'
+    import { mountSuspended } from '@nuxt/test-utils/runtime'
+    import { Hello } from '#components'
+
+    it('can mount some component', async () => {
+        const component = await mountSuspended(Hello)
+        expect(component.text()).toMatchInlineSnapshot(
+            '"Hello from Nuxt!"'
+        )
+    })
+    ```
+5. Run Vitest:
+    - `npx vitest spec/components` (1 test should pass)
+
+## Vitest Docker
+1. Let's create our `Dockerfile`:
+    - `touch Dockerfile`
+    ```
+    # frontend/Dockerfile
+    FROM node:18
+    WORKDIR /app
+    COPY package.json package-lock.json ./
+    RUN npm ci
+    COPY . .
+    RUN npm install -g vitest
+    CMD ["npx", "vitest", "spec/components"]
+    ```
+2. Let's build the Docker image and run the container:
+  - `docker build -t nuxt-vitest .`
+  - `docker run --rm nuxt-vitest`
+3. `cd ..`
+
+## Vitest CircleCI
+Now from the root directory of our app, let's setup Vitest for CircleCI.
+1. Let's create a `docker-compse.yml` file:
+    - `touch docker-compose.yml`
+    ```
+    # docker-compose.yml
+
+    version: '3.8'
+    services:
+      nuxt-vitest:
+        build:
+          context: ./frontend
+        command: npx vitest spec/components
+        working_dir: /app
+    ```
+2. Let's change our `.circleci/config.yml` to this:
+    ```
+    version: 2.1
+
+    jobs:
+      test:
+        docker:
+          - image: circleci/node:18
+        steps:
+          - checkout
+          - run:
+              name: Install dependencies
+              command: npm ci
+          - run:
+              name: Run Vitest
+              command: npx vitest spec/components
+
+    workflows:
+      version: 2
+      test_workflow:
+        jobs:
+          - test
+    ```
+3. Let's commit these changes and push them:
+    - `git add .`
+    - `git commit -m "Add Vitest"`
+    - `git push`
+    - Then the tests will start on CircleCI
+    - The `test` step should show green with one test passing
+
+## Tweak Frontend To Talk To Backend
+1. Let's configure our `nuxt.config.ts` to talk to the backend:
+    - `cd frontend`
     - `frontend/nuxt.config.ts` (make sure to replace `<...>` with your app backend name)
     ```
-    // nuxt.config.ts
+    // frontend/nuxt.config.ts
 
     export default defineNuxtConfig({
       server: { port: 3001, host: '0.0.0.0' },
       runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1'}},
       $production: { runtimeConfig: { public: { apiURL: 'https://<app backend name>.fly.dev/api/v1' }}},
-      devtools: { enabled: false },
+      modules: ['@nuxt/test-utils/module']
     })
     ```
-5. Let's make our component talk to the backend as well:
+2. Let's make our component talk to the backend as well:
     ```
     <!--- frontend/components/Hello.vue -->
     
@@ -99,8 +187,17 @@
     });
     </script>
     ```
-6. Change directory to the app's root directory:
-    - `cd ..`
+3. Before we setup the backend, let's double check Vitest is still passing locally, on local Docker and on CircleCI.
+    - locally:
+      - `npx vitest spec/components` (1 test should pass)
+    - local docker:
+      - `cd ..`
+      - TODO: `docker-compose` commands here
+    - CircleCI:
+      - `git add .`
+      - `git commit -m "Setup frontend to talk to backend"`
+      - `git push`
+      - Check the CircleCI build (1 test should pass)
 
 ## Local Backend Setup (Rails)
 
@@ -811,3 +908,106 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - Click the "Set up Project" button on the modal.
     - This will take you to your new repo's "Pipeline" and a run will have started
     - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
+
+
+
+
+    version: 2.1
+
+    jobs:
+      test_backend:
+        docker:
+          - image: ruby:3.3.7-bullseye
+            environment:
+              RAILS_ENV: test
+              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
+              DB_HOST: db
+          - image: postgres:13.4
+            name: db
+            environment:
+              POSTGRES_USER: postgres
+              POSTGRES_DB: backend_test
+              POSTGRES_PASSWORD: yourpassword
+        steps:
+          - checkout
+          
+          - restore_cache:
+              keys:
+                - v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+                - v1-backend-dependencies-
+
+          - run:
+              name: Install System Dependencies
+              command: |
+                apt-get update
+                apt-get install -y build-essential libpq-dev
+
+          - run:
+              name: Install Bundler
+              command: gem install bundler
+
+          - run:
+              name: Install Gems
+              command: |
+                cd backend
+                bundle config set path 'vendor/bundle'
+                bundle install --jobs=4 --retry=3
+
+          - save_cache:
+              paths:
+                - backend/vendor/bundle
+              key: v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
+
+          - run:
+              name: Setup Database
+              command: |
+                cd backend
+                bundle exec rails db:setup
+
+          - run:
+              name: Run RSpec Tests
+              command: |
+                cd backend
+                bundle exec rspec
+
+      test_frontend:
+        docker:
+          - image: node:18
+        steps:
+          - checkout
+
+          - restore_cache:
+              keys:
+                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+                - v1-frontend-dependencies-
+
+          - run:
+              name: Install Node.js Dependencies
+              command: |
+                cd frontend
+                npm ci
+
+          - save_cache:
+              paths:
+                - frontend/node_modules
+              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
+
+          - run:
+              name: Run Vitest Tests
+              command: |
+                cd frontend
+                npx vitest run spec/components
+
+    workflows:
+      version: 2
+      test:
+        jobs:
+          - test_backend
+          - test_frontend
+    ```
+2. Let's commit these changes and push them:
+    - `git add .`
+    - `git commit -m "Add Vitest"`
+    - `git push`
+    - Then the tests will start on CircleCI
+    - Both `test_frontend` (Vitest) and `test_backend` (RSpec) should pass
