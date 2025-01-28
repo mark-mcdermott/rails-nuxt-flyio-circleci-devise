@@ -19,6 +19,7 @@
     "@flydotio/dockerfile": "^0.7.4",
     "@nuxt/test-utils": "^3.15.4",
     "@playwright/test": "^1.50.0",
+    "@vitejs/plugin-vue": "^5.2.1",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^16.7.3",
     "vitest": "^3.0.4"
