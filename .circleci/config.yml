@@ -25,13 +25,15 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Dependencies
+          name: Install System Dependencies
           command: |
-            apt-get update && apt-get install -y nodejs npm build-essential
-            gem install bundler
+            apt-get update && \
+            apt-get install -y libpq-dev build-essential
+      - run:
+          name: Install Bundler
+          command: gem install bundler
       - run:
           name: Install Rails Gems
-          command: cd backend && bundle install
       - run:
           name: Start Rails Backend
           command: cd backend && rails server -e test -p 3000
