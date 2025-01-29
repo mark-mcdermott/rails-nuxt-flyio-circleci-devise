@@ -29,7 +29,7 @@
       - choose `npm` for package manager
       - choose `no` for initialize git repository
     - `cd frontend`
-3. Create a simple component and use it in `app.vue`:
+2. Create a simple component and use it in `app.vue`:
     - `mkdir components`
     - `touch components/Hello.vue`
     ```
@@ -46,6 +46,9 @@
       <Hello />
     </template>
     ```
+3. Run the Nuxt app locally:
+    - `npm run dev` (at `http://localhost:3000` you should see "Hello from Nuxt!")
+4. Stop the server by pressing `command + c`.
 
 ### Vitest (Local)
 We'll setup Vitest here for component tests.
