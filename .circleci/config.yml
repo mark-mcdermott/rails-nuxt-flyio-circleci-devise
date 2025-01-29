@@ -21,14 +21,15 @@ jobs:
       - image: ruby:3.3.0-slim-bullseye
         environment:
           RAILS_ENV: test
-      - image: cimg/node:18.18
     steps:
       - checkout
       - run:
           name: Install System Dependencies
           command: |
             apt-get update && \
-            apt-get install -y libpq-dev build-essential
+            apt-get install -y libpq-dev build-essential curl && \
+            curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+            apt-get install -y nodejs
       - run:
           name: Install Bundler
           command: gem install bundler
@@ -36,12 +37,12 @@ jobs:
           name: Install Rails Gems
           command: cd backend && bundle install
       - run:
+          name: Install Frontend Dependencies
+          command: cd frontend && npm ci
+      - run:
           name: Start Rails Backend
           command: cd backend && rails server -e test -p 3000
           background: true
-      - run:
-          name: Install Frontend Dependencies
-          command: cd frontend && npm ci
       - run:
           name: Start Nuxt Frontend
           command: cd frontend && npx nuxi dev -p 3001
