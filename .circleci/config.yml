@@ -24,8 +24,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Verify Ruby installation
+          command: ruby -v
+      - run:
           name: Install Bundler
-          command: gem install bundler
+          command: apt-get update && apt-get install -y ruby-full && gem install bundler
       - run:
           name: Install Rails dependencies
           command: cd backend && bundle install
