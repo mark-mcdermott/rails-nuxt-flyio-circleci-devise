@@ -15,7 +15,7 @@
     .appinfo
     ```
 5. Choose what your unique front and backend app names will be. If someone else on Fly.io already has an app with the same name, they will ask you to choose a new name. So the more unique, the better. Something like `myuniqueapp001-backend` and `myuniqueapp001-frontend` should do the trick.
-6. In `.appinfo` add (replacing the `<...>` parts with the names you chose above):
+6. In `.appinfo` add *(replacing the `<...>` parts with the names you chose above)*:
     ```
     backend app name: <your backend app name>
     frontend app name: <your frontend app name>
@@ -156,7 +156,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
 ## Tweak Frontend To Talk To Backend
 1. Let's configure our `nuxt.config.ts` to talk to the backend:
     - `cd frontend`
-    - `frontend/nuxt.config.ts` (make sure to replace `<...>` with your app backend name)
+    - `frontend/nuxt.config.ts` *(make sure to replace `<...>` with your app backend name)*
     ```
     // frontend/nuxt.config.ts
 
@@ -261,7 +261,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     end
     ```
 5. Set our CORS configuration the backend doesn't block calls from the frontend:
-    `config/initializers/cors.rb` (make sure to replace `<...>` with your app frontend name)
+    `config/initializers/cors.rb` *(make sure to replace `<...>` with your app frontend name)*
     ```
     # backend/config/initializers/cors.rb
 
@@ -306,7 +306,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
 
 ### Deploy Frontend
 1. In your `frontend/package.json` in the `scripts` section, add this line: `"start": "nuxt start",`
-3. Let's add our Fly.io configuration file, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. Make sure to replace `<...>` with your app frontend name. Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
+3. Let's add our Fly.io configuration file, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. *Make sure to replace `<...>` with your app frontend name.* Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
     - `touch fly.toml`
     ```
     # frontend/fly.toml
@@ -343,7 +343,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
 2. We'll start by deleting the Docker files that Rails creates with `rails new`:
     - `rm Dockerfile`
     - `rm .dockerignore`
-3. Let's create our backend `fly.toml` file, our Fly.io configuration file for our backend, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. Make sure to replace `<...>` with your app backend name. Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
+3. Let's create our backend `fly.toml` file, our Fly.io configuration file for our backend, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. *Make sure to replace `<...>` with your app backend name.* Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
     - `touch fly.toml`
     ```
     # backend/fly.toml
@@ -383,7 +383,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
       - Watch the output and look for the "Postgres cluster details", which end with the line, "Save your credentials in a secure place -- you won't be able to see them again!" When you see it, copy and paste this section to your `.secrets` file.
       - When it asks, "Overwrite entrypoint?", press 'n'
       - When it asks, "Overwrite fly.toml?", press 'n'
-5. Go to your *frontend* app url in a browser.
+5. Go to your **frontend** app url in a browser.
     - You should see "Hello from Nuxt!" *and* "Hello from Rails!"
     - In the console, there should be no 404 errors
 6. `cd ..` into the app's root directory
