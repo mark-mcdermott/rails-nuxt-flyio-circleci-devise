@@ -7,17 +7,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Navigate to frontend directory
-          command: cd frontend
-      - run:
           name: Install dependencies
-          command: npm ci
+          command: cd frontend && npm ci
       - run:
           name: Generate Nuxt files
-          command: npx nuxi prepare
+          command: cd frontend && npx nuxi prepare
       - run:
           name: Run Vitest
-          command: npx vitest spec/components
+          command: cd fronted && npx vitest spec/components
 
 workflows:
   version: 2
