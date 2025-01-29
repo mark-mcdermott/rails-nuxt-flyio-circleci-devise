@@ -124,8 +124,6 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - `mkdir .circleci`
     - `touch .circleci/config.yml`
     ```
-    version: 2.1
-
     jobs:
       vitest:
         docker:
