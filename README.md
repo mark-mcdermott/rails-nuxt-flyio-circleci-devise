@@ -227,7 +227,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
       - `git add .`
       - `git commit -m "Setup frontend to talk to backend"`
       - `git push`
-      - Check the CircleCI build (1 test should pass)
+      - Check the CircleCI build (vitest section should be green and passing)
 
 ## Local Backend Setup (Rails)
 
