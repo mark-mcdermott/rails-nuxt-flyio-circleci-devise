@@ -18,10 +18,10 @@ jobs:
 
   playwright:
     docker:
-      - image: ruby:3.3.0-slim-bullseye 
+      - image: ruby:3.3.0-slim-bullseye
         environment:
           RAILS_ENV: test
-      - image: cimg/node:18.18 
+      - image: cimg/node:18.18
     steps:
       - checkout
       - run:
@@ -34,6 +34,7 @@ jobs:
           command: gem install bundler
       - run:
           name: Install Rails Gems
+          command: cd backend && bundle install
       - run:
           name: Start Rails Backend
           command: cd backend && rails server -e test -p 3000
