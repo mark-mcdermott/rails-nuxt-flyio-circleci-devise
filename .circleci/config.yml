@@ -22,16 +22,22 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: cd frontend && npm ci
+          name: Install Rails dependencies
+          command: cd backend && bundle install
       - run:
           name: Start Rails backend
-          command: cd backend && bundle install && rails server -e test -p 3000
+          command: cd backend && rails server -e test -p 3000
           background: true
+      - run:
+          name: Install Nuxt dependencies
+          command: cd frontend && npm ci
       - run:
           name: Start Nuxt frontend
           command: cd frontend && npx nuxi dev -p 3001
           background: true
+      - run:
+          name: Wait for services to start
+          command: sleep 10
       - run:
           name: Run Playwright tests
           command: cd frontend && npx playwright test spec/e2e
