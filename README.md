@@ -1,4 +1,12 @@
-# Rails-Nuxt-Fly.io-CircleCI MVP App
+# Barebones Rails, Nuxt and Fly.io Tutorial
+### With RSpec, Vitest and Playwright Tests on CircleCI
+
+Here we’ll make a MVP (“minimum viable product”) of a rails API-only backend with rspec tests that talks to a nuxt frontend with vitest component tests and playwright end-to-end tests. This will have close to no functionality and no styling, but everything will be wired together correctly and all three test suites will pass when run locally or on CircleCI.
+
+Prereqs (stuff you'll need installed that I don't go over here):
+- Postgres
+- Desktop Docker
+- Rails, Nuxt, Ruby, Node, NPM, Bundler
 
 # Local Preliminary App Setup
 1. Create app directory:
