@@ -107,7 +107,7 @@ We'll setup Vitest here for component tests.
 
 ## Vitest CircleCI
 Now from the root directory of our app, let's setup Vitest for CircleCI.
-2. Let's create a `.circleci/config.yml`, the config file for CircleCI:
+1. Let's create a `.circleci/config.yml`, the config file for CircleCI:
     - `mkdir .circleci`
     - `touch .circleci/config.yml`
     ```
@@ -133,12 +133,25 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
         jobs:
           - vitest
     ```
-3. Let's commit these changes and push them:
+3. You'll need to deploy the whole app to github.
     - `git add .`
     - `git commit -m "Add Vitest"`
-    - `git push`
-    - Then the tests will start on CircleCI
-    - The `vitest` step should show green with one test passing
+    - Create a new public repo in the github UI
+    - `git branch -M main`
+    - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
+    - `git remote add origin <repo web url>`
+    - `git push -u origin main`
+4. Configure CircleCI for the new repo
+    - Login to CircleCI
+    - Click the "Go to application" button
+    - Click "Projects" in the left sidebar
+    - Find your new repo in the Project list
+    - In your repo's project row, click "Set up Project" towards the right.
+    - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
+    - In the "From which branch" field under "Fastest", type `main`
+    - Click the "Set up Project" button on the modal.
+    - This will take you to your new repo's "Pipeline" and a run will have started
+    - You can watch the run and when it's finished, the Vitest step should have passed and everything should be green.
 
 ## Tweak Frontend To Talk To Backend
 1. Let's configure our `nuxt.config.ts` to talk to the backend:
@@ -293,7 +306,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
 
 ### Deploy Frontend
 1. In your `frontend/package.json` in the `scripts` section, add this line: `"start": "nuxt start",`
-3. Let's add our Fly.io configuration file, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. *Make sure to replace `<...>` with your app frontend name.* Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
+2. Let's add our Fly.io configuration file, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. *Make sure to replace `<...>` with your app frontend name.* Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
     - `touch fly.toml`
     ```
     # frontend/fly.toml
@@ -316,14 +329,14 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
       cpu_kind = 'shared'
       cpus = 1
     ```
-4. `fly launch`
+3. `fly launch`
     - When it asks, "A fly.toml file was found. Would you like to copy its configuration to the new app?", press `y`
     - When it asks, "Do you want to tweak these settings before proceeding?", press `N` or enter
     - When `fly launch` if finished, look at the output for "Visit your newly deployed app at `<url>`" and copy/paste the url into the "frontend app url" line of your `.appinfo`
-5. Go to your frontend app url in a browser.
+4. Go to your frontend app url in a browser.
     - You should see "Hello from Nuxt!", but not "Hello from Rails!"
     - In the console, there will be a failed request to the backend (becuase they backend's not deployed yet)
-6. `cd ..` into the app's root directory
+5. `cd ..` into the app's root directory
 
 ### Deploy Backend
 1. `cd backend`
@@ -640,7 +653,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 2. Let's download a `wait-for-it.sh` script to our app's root directory and set the file permissions. This lets us wait for the database to be ready before running RSpec:
     - `curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh`
     - `chmod +x wait-for-it.sh`
-2. In `backend/config/database.yml`, change the `test:` section to:
+3. In `backend/config/database.yml`, change the `test:` section to:
     ```
     test:
       <<: *default
@@ -650,215 +663,116 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
       host: <%= ENV.fetch("DB_HOST", "localhost") %>
       port: <%= ENV.fetch("DB_PORT", "5432") %>
     ```
-3. Run RSpec locally on Docker:
+4. Run RSpec locally on Docker:
     - `docker-compose down --volumes --remove-orphans`
     - `docker-compose run --rm rspec` (you should see in green `1 example, 0 failures`)
       
-4. Make sure RSpec still works locally:
+5. Make sure RSpec still works locally:
     - `cd backend`
     - `rspec` (you should see in green `1 example, 0 failures` here, too)
     - `cd ..`
 
 ## RSpec On CircleCI
-1. Let's create a `.circleci/config.yml` file, the file CircleCI uses for our CI/CD configuration:
-    - `mkdir .circleci`
-    - `touch .circleci/config.yml`
+1. Let's now add RSpec to our `.circleci/config.yml`:
     ```
-    version: 2.1
+    # .circleci/config.yml
 
     jobs:
-      test:
+      vitest:
         docker:
-          - image: ruby:3.3.7-bullseye
-            environment:
-              RAILS_ENV: test
-              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
-              DB_HOST: db
-          - image: postgres:13.4
-            name: db
-            environment:
-              POSTGRES_USER: postgres
-              POSTGRES_DB: backend_test
-              POSTGRES_PASSWORD: yourpassword
+          - image: cimg/node:18.18
         steps:
           - checkout
-          - restore_cache:
-              keys:
-                - v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
-                - v1-dependencies-
-          
           - run:
-              name: Install System Dependencies
-              command: |
-                apt-get update
-                apt-get install -y build-essential libpq-dev
+              name: Install dependencies
+              command: cd frontend && npm ci
+          - run:
+              name: Generate Nuxt files
+              command: cd frontend && npx nuxi prepare
+          - run:
+              name: Run Vitest
+              command: cd frontend && npx vitest spec/components
 
+      playwright:
+        docker:
+          - image: cimg/ruby:3.3-node
+            environment:
+              RAILS_ENV: test
+        steps:
+          - checkout
+          - run:
+              name: Install System Dependencies for Playwright
+              command: |
+                sudo apt-get update && sudo apt-get install -y \
+                libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+                libxcomposite1 libxdamage1 libgbm1 libpango-1.0-0 libxrandr2 \
+                libcups2 libdrm2 libxshmfence1 libasound2
+          - run:
+              name: Install Frontend Dependencies
+              command: cd frontend && npm ci
+          - run:
+              name: Install Playwright Browsers
+              command: cd frontend && npx playwright install
           - run:
               name: Install Bundler
               command: gem install bundler
-
           - run:
-              name: Install Gems
-              command: |
-                cd backend
-                bundle config set path 'vendor/bundle'
-                bundle install --jobs=4 --retry=3
-
-          - save_cache:
-              paths:
-                - backend/vendor/bundle
-              key: v1-dependencies-{{ checksum "backend/Gemfile.lock" }}
-
+              name: Install Rails Gems
+              command: cd backend && bundle install
           - run:
-              name: Setup Database
-              command: |
-                cd backend
-                bundle exec rails db:setup
-
+              name: Start Rails Backend
+              command: cd backend && rails server -e test -p 3000
+              background: true
           - run:
-              name: Run RSpec Tests
-              command: |
-                cd backend
-                bundle exec rspec
+              name: Start Nuxt Frontend
+              command: cd frontend && npx nuxi dev -p 3001
+              background: true
+          - run:
+              name: Wait for Services to Start
+              command: sleep 10
+          - run:
+              name: Run Playwright Tests
+              command: cd frontend && npx playwright test spec/e2e
 
-    workflows:
-      version: 2
-      test:
-        jobs:
-          - test
-    ```
-2. You'll need to deploy the whole app to github.
-    - `git add .`
-    - `git commit -m "Add app"`
-    - Create a new public repo in the github UI
-    - `git branch -M main`
-    - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
-    - `git remote add origin <repo web url>`
-    - `git push -u origin main`
-3. Configure CircleCI for the new repo
-    - Login to CircleCI
-    - Click the "Go to application" button
-    - Click "Projects" in the left sidebar
-    - Find your new repo in the Project list
-    - In your repo's project row, click "Set up Project" towards the right.
-    - The "Select your config.yml file" modal shows and "Fastest" is already the selected radio option
-    - In the "From which branch" field under "Fastest", type `main`
-    - Click the "Set up Project" button on the modal.
-    - This will take you to your new repo's "Pipeline" and a run will have started
-    - You can watch the run and when it's finished, the RSpec test should have passed and everything should be green.
-
-
-
-
-    version: 2.1
-
-    jobs:
-      test_backend:
+      rspec:
         docker:
-          - image: ruby:3.3.7-bullseye
+          - image: cimg/ruby:3.3-node
             environment:
               RAILS_ENV: test
-              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
-              DB_HOST: db
-          - image: postgres:13.4
-            name: db
+          - image: postgres:13
             environment:
               POSTGRES_USER: postgres
+              POSTGRES_PASSWORD: postgres
               POSTGRES_DB: backend_test
-              POSTGRES_PASSWORD: yourpassword
         steps:
           - checkout
-          
-          - restore_cache:
-              keys:
-                - v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
-                - v1-backend-dependencies-
-
           - run:
-              name: Install System Dependencies
+              name: Wait for Database
               command: |
-                apt-get update
-                apt-get install -y build-essential libpq-dev
-
+                for i in {1..30}; do
+                  pg_isready -h db -p 5432 -U postgres && break || sleep 2;
+                done
           - run:
-              name: Install Bundler
-              command: gem install bundler
-
-          - run:
-              name: Install Gems
+              name: Install Dependencies
               command: |
-                cd backend
-                bundle config set path 'vendor/bundle'
-                bundle install --jobs=4 --retry=3
-
-          - save_cache:
-              paths:
-                - backend/vendor/bundle
-              key: v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
-
+                cd backend && gem install bundler && bundle install
           - run:
-              name: Setup Database
+              name: Run Database Setup
               command: |
-                cd backend
-                bundle exec rails db:setup
-
+                cd backend && bin/rails db:create db:migrate
           - run:
-              name: Run RSpec Tests
-              command: |
-                cd backend
-                bundle exec rspec
-
-      test_frontend:
-        docker:
-          - image: node:18
-        steps:
-          - checkout
-
-          - restore_cache:
-              keys:
-                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-                - v1-frontend-dependencies-
-
-          - run:
-              name: Install Node.js Dependencies
-              command: |
-                cd frontend
-                npm ci
-
-          - save_cache:
-              paths:
-                - frontend/node_modules
-              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-
-          - run:
-              name: Run Vitest Tests
-              command: |
-                cd frontend
-                npx vitest run spec/components
+              name: Run RSpec
+              command: cd backend && rspec
 
     workflows:
       version: 2
-      test:
+      test_workflow:
         jobs:
-          - test_backend
-          - test_frontend
+          - rspec
+          - vitest
+          - playwright
     ```
-2. Let's commit these changes and push them:
+2. Just commit your changes and push:
     - `git add .`
-    - `git commit -m "Add Vitest"`
-    - `git push`
-    - Then the tests will start on CircleCI
-    - Both `test_frontend` (Vitest) and `test_backend` (RSpec) should pass
-
-
-
-  2. In `backend/config/database.yml`, change the `default` setting to:
-    ```
-    default: &default
-      adapter: postgresql
-      encoding: unicode
-      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-      username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
-      password: <%= ENV.fetch("DB_PASSWORD", "yourpassword") %>
-      host: <%= ENV.fetch("DB_HOST", "localhost") %>
-    ```
+    - `git commit -m "Add RSpec"`
+    - `git push` (rspec, vitest and playwright should all be green and passing on CircleCI)
