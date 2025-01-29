@@ -19,8 +19,13 @@ jobs:
   playwright:
     docker:
       - image: cimg/node:18.18
+        environment:
+          RAILS_ENV: test
     steps:
       - checkout
+      - run:
+          name: Install Bundler
+          command: gem install bundler
       - run:
           name: Install Rails dependencies
           command: cd backend && bundle install
