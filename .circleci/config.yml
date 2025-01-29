@@ -57,6 +57,24 @@ jobs:
           name: Run Playwright Tests
           command: cd frontend && npx playwright test spec/e2e
 
+  rspec:
+    docker:
+      - image: cimg/ruby:3.3-node
+        environment:
+          RAILS_ENV: test
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            gem install bundler && bundle install
+      - run:
+          name: Run Database Setup
+          command: bin/rails db:create db:migrate
+      - run:
+          name: Run RSpec
+          command: rspec
+
 workflows:
   version: 2
   test_workflow:
