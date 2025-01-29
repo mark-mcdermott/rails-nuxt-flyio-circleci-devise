@@ -594,8 +594,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 5. `cd ..`
 
 # RSpec On Local Docker
-1. In the root directory of our app, let's create a `docker-compose.yml`:
-    - `touch docker-compose.yml`
+1. In the root directory of our app, let's add `db` and `rspec` services to `docker-compose.yml`:
     ```
     # docker-compose.yml
 
@@ -638,6 +637,9 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
           db:
             condition: service_healthy
     ```
+2. Let's download a `wait-for-it.sh` script to our app's root directory and set the file permissions. This lets us wait for the database to be ready before running RSpec:
+    - `curl -o wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh`
+    - `chmod +x wait-for-it.sh`
 2. In `backend/config/database.yml`, change the `test:` section to:
     ```
     test:
@@ -650,7 +652,7 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     ```
 3. Run RSpec locally on Docker:
     - `docker-compose down --volumes --remove-orphans`
-    - ` docker-compose run --rm rspec` (you should see in green `1 example, 0 failures`)
+    - `docker-compose run --rm rspec` (you should see in green `1 example, 0 failures`)
       
 4. Make sure RSpec still works locally:
     - `cd backend`
