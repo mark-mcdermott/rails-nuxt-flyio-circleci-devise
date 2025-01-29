@@ -222,7 +222,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - local docker:
       - `cd ..`
       - `docker-compose build`
-      - `docker-compose up`
+      - `docker-compose up`  (1 test should pass)
     - CircleCI:
       - `git add .`
       - `git commit -m "Setup frontend to talk to backend"`
