@@ -597,73 +597,64 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
 1. In the root directory of our app, let's create a `docker-compose.yml`:
     - `touch docker-compose.yml`
     ```
+    # docker-compose.yml
+
     services:
+
+      vitest:
+        image: cimg/node:18.18
+        working_dir: /app/frontend
+        command: bash -c "npm ci && npx nuxi prepare && npx vitest spec/components"
+        volumes:
+          - .:/app
+
       db:
-        image: postgres:13.4
+        image: postgres:13
         environment:
           POSTGRES_USER: postgres
-          POSTGRES_DB: backend_test
-          POSTGRES_PASSWORD: yourpassword  # Replace with a strong password
+          POSTGRES_PASSWORD: postgres
         ports:
           - "5432:5432"
-        volumes:
-          - db_data:/var/lib/postgresql/data
         healthcheck:
-          test: ["CMD-SHELL", "pg_isready -U postgres"]
-          interval: 10s
-          timeout: 5s
+          test: ["CMD", "pg_isready", "-U", "postgres"]
+          interval: 5s
+          timeout: 10s
           retries: 5
 
-      backend:
-        image: ruby:3.3.7-bullseye
+      rspec:
+        image: cimg/ruby:3.3-node
+        working_dir: /app/backend
         environment:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
           DB_HOST: db
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_PORT: 5432
+        command: bash -c "./wait-for-it.sh db:5432 -- bundle install && bin/rails db:create db:migrate && rspec"
         volumes:
-          - ./backend:/app/backend
-        working_dir: /app/backend
-        command: bash -c "bundle config set path 'vendor/bundle' && bundle install --jobs=4 --retry=3 && tail -f /dev/null"
+          - .:/app
+          - ./wait-for-it.sh:/app/backend/wait-for-it.sh
         depends_on:
           db:
             condition: service_healthy
-
-      frontend:
-        image: node:18-alpine
-        environment:
-          NODE_ENV: test
-        volumes:
-          - ./frontend:/app/frontend
-        working_dir: /app/frontend
-        command: sh -c "npm install && tail -f /dev/null"
-        depends_on:
-          db:
-            condition: service_healthy
-
-    volumes:
-      db_data:
     ```
-2. In `backend/config/database.yml`, change the default setting to:
+2. In `backend/config/database.yml`, change the `test:` section to:
     ```
-    default: &default
-      adapter: postgresql
-      encoding: unicode
-      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+    test:
+      <<: *default
+      database: backend_test
       username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
-      password: <%= ENV.fetch("DB_PASSWORD", "yourpassword") %>
+      password: <%= ENV.fetch("DB_PASSWORD", "postgres") %>
       host: <%= ENV.fetch("DB_HOST", "localhost") %>
+      port: <%= ENV.fetch("DB_PORT", "5432") %>
     ```
 3. Run RSpec locally on Docker:
     - `docker-compose down --volumes --remove-orphans`
-    - `docker-compose up`
-    - When the above command finshes, leave that terminal pane open and open a second
-      - In the second terminal pane:
-        - `docker-compose exec backend bundle install`
-        - `docker-compose exec backend bundle exec rspec` (1 test should pass)
+    - ` docker-compose run --rm rspec` (you should see in green `1 example, 0 failures`)
       
 4. Make sure RSpec still works locally:
     - `cd backend`
-    - `rspec` (you should see `1 example, 0 failures` here, too)
+    - `rspec` (you should see in green `1 example, 0 failures` here, too)
     - `cd ..`
 
 ## RSpec On CircleCI
@@ -856,3 +847,16 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `git push`
     - Then the tests will start on CircleCI
     - Both `test_frontend` (Vitest) and `test_backend` (RSpec) should pass
+
+
+
+  2. In `backend/config/database.yml`, change the `default` setting to:
+    ```
+    default: &default
+      adapter: postgresql
+      encoding: unicode
+      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+      username: <%= ENV.fetch("DB_USERNAME", "postgres") %>
+      password: <%= ENV.fetch("DB_PASSWORD", "yourpassword") %>
+      host: <%= ENV.fetch("DB_HOST", "localhost") %>
+    ```
