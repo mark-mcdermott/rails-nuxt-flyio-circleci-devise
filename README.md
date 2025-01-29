@@ -99,11 +99,13 @@ We'll setup Vitest here for component tests.
     # docker-compose.yml
 
     services:
-      nuxt-vitest:
-        build:
-          context: ./frontend
-        command: npx vitest spec/components
-        working_dir: /app
+
+      vitest:
+        image: cimg/node:18.18
+        working_dir: /app/frontend
+        command: bash -c "npm ci && npx nuxi prepare && npx vitest spec/components"
+        volumes:
+          - .:/app
     ```
 2. Let's run Vitest on our local Docker setup:
   - `docker-compose run --rm vitest`
