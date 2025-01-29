@@ -128,23 +128,26 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     version: 2.1
 
     jobs:
-      test:
+      vitest:
         docker:
-          - image: circleci/node:18
+          - image: cimg/node:18.18
         steps:
           - checkout
           - run:
               name: Install dependencies
-              command: npm ci
+              command: cd frontend && npm ci
+          - run:
+              name: Generate Nuxt files
+              command: cd frontend && npx nuxi prepare
           - run:
               name: Run Vitest
-              command: npx vitest spec/components
+              command: cd frontend && npx vitest spec/components
 
     workflows:
       version: 2
       test_workflow:
         jobs:
-          - test
+          - vitest
     ```
 3. Let's commit these changes and push them:
     - `git add .`
