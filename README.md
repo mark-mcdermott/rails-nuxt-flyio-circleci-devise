@@ -102,10 +102,8 @@ We'll setup Vitest here for component tests.
         command: npx vitest spec/components
         working_dir: /app
     ```
-2. Let's build the Docker image and run the container:
-  - `docker build -t nuxt-vitest .`
-  - `docker run --rm nuxt-vitest`
-3. `cd ..`
+2. Let's run Vitest on our local Docker setup:
+  - `docker-compose run --rm vitest`
 
 ## Vitest CircleCI
 Now from the root directory of our app, let's setup Vitest for CircleCI.
@@ -424,7 +422,67 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - Stop the first two terminal panes with control + c.
 
 ## Playwright Docker
-I was unable to get playwright working on docker on my computer. I ran into issues with ARM64 incompatability with the appropriate Docker images and wasn't able to figure out a way around them. So we'll skip this part.
+I was unable to get playwright working on docker on my computer. I ran into issues with ARM64 incompatability with the appropriate Docker images and wasn't able to figure out a way around them. **So just skip this part**.
+
+But if you're feeling intrepid, chaning the `docker-compose.yml` to something like this might get you partway there:
+    ```
+    # docker-compose.yml
+
+    services:
+
+      playwright:
+        image: cimg/ruby:3.3-node
+        working_dir: /app/frontend
+        command: |
+          apt-get update && apt-get install -y \
+          libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+          libxcomposite1 libxdamage1 libgbm1 libpango-1.0-0 libxrandr2 \
+          libcups2 libdrm2 libxshmfence1 libasound2 && \
+          npm ci && npx playwright install && npx playwright test spec/e2e
+        depends_on:
+          - nuxt
+        volumes:
+          - .:/app
+
+      db:
+        image: postgres:13
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - "5432:5432"
+
+      rails:
+        image: cimg/ruby:3.3-node
+        working_dir: /app/backend
+        environment:
+          RAILS_ENV: test
+        command: bundle install && rails server -e test -p 3000
+        ports:
+          - "3000:3000"
+        volumes:
+          - .:/app
+        depends_on:
+          - db
+
+      nuxt:
+        image: cimg/node:18.18
+        working_dir: /app/frontend
+        command: npm ci && npx nuxi dev -p 3001
+        ports:
+          - "3001:3001"
+        volumes:
+          - .:/app
+        depends_on:
+          - rails
+
+      vitest:
+        image: cimg/node:18.18
+        working_dir: /app/frontend
+        command: bash -c "npm ci && npx nuxi prepare && npx vitest spec/components"
+        volumes:
+          - .:/app
+    ```
 
 ## Playwright On CircleCI
 1. From the root directory of our app, let's change our `.circleci/config.yml` to include a Playwright section:
@@ -499,7 +557,7 @@ I was unable to get playwright working on docker on my computer. I ran into issu
     - `git add .`
     - `git commit -m "Add Playwright"`
     - `git push`
-    - That should start the tests running and now RSpec, Vitest and Playwright should all pass and show green.
+    - That should start the tests running and now Vitest and Playwright should pass and show green.
 
 # RSpec (Local)
 Here we'll create a simple RSpec test for the Rails HelloController. Then we'll verify it passes when running locally.
