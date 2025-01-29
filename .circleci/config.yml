@@ -24,12 +24,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Verify Node.js and npm Installation
-          command: |
-            node -v && npm -v
-      - run:
           name: Install Playwright System Dependencies
-          command: sudo npx playwright install-deps
+          command: sudo npx --yes playwright install-deps --unsafe-perm
+      - run:
+          name: Install Frontend Dependencies
+          command: cd frontend && npm ci
       - run:
           name: Install Playwright Browsers
           command: cd frontend && npx playwright install
