@@ -87,28 +87,10 @@ We'll setup Vitest here for component tests.
     ```
 5. Run Vitest:
     - `npx vitest spec/components` (1 test should pass)
+    - `cd ..`
 
 ## Vitest Docker
-1. Let's create our `Dockerfile`:
-    - `touch Dockerfile`
-    ```
-    # frontend/Dockerfile
-    FROM node:18
-    WORKDIR /app
-    COPY package.json package-lock.json ./
-    RUN npm ci
-    COPY . .
-    RUN npm install -g vitest
-    CMD ["npx", "vitest", "spec/components"]
-    ```
-2. Let's build the Docker image and run the container:
-  - `docker build -t nuxt-vitest .`
-  - `docker run --rm nuxt-vitest`
-3. `cd ..`
-
-## Vitest CircleCI
-Now from the root directory of our app, let's setup Vitest for CircleCI.
-1. Let's create a `docker-compse.yml` file:
+1. From the root directory of our app, let's create a `docker-compse.yml` file:
     - `touch docker-compose.yml`
     ```
     # docker-compose.yml
@@ -120,6 +102,13 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
         command: npx vitest spec/components
         working_dir: /app
     ```
+2. Let's build the Docker image and run the container:
+  - `docker build -t nuxt-vitest .`
+  - `docker run --rm nuxt-vitest`
+3. `cd ..`
+
+## Vitest CircleCI
+Now from the root directory of our app, let's setup Vitest for CircleCI.
 2. Let's create a `.circleci/config.yml`, the config file for CircleCI:
     - `mkdir .circleci`
     - `touch .circleci/config.yml`
@@ -438,133 +427,73 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
 I was unable to get playwright working on docker on my computer. I ran into issues with ARM64 incompatability with the appropriate Docker images and wasn't able to figure out a way around them. So we'll skip this part.
 
 ## Playwright On CircleCI
-1. From the root directory of our app, let's change our `docker-compose.yml` to include a Playwright section:
+1. From the root directory of our app, let's change our `.circleci/config.yml` to include a Playwright section:
     ```
+    # .circleci/config.yml
+
     jobs:
-      test_backend:
+      vitest:
         docker:
-          - image: ruby:3.3.7-bullseye
-            environment:
-              RAILS_ENV: test
-              DATABASE_URL: postgres://postgres:yourpassword@db:5432/backend_test
-              DB_HOST: db
-          - image: postgres:13.4
-            name: db
-            environment:
-              POSTGRES_USER: postgres
-              POSTGRES_DB: backend_test
-              POSTGRES_PASSWORD: yourpassword
+          - image: cimg/node:18.18
         steps:
           - checkout
-
-          - restore_cache:
-              keys:
-                - v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
-                - v1-backend-dependencies-
-
           - run:
-              name: Install System Dependencies
-              command: |
-                apt-get update
-                apt-get install -y build-essential libpq-dev
+              name: Install dependencies
+              command: cd frontend && npm ci
+          - run:
+              name: Generate Nuxt files
+              command: cd frontend && npx nuxi prepare
+          - run:
+              name: Run Vitest
+              command: cd frontend && npx vitest spec/components
 
+      playwright:
+        docker:
+          - image: cimg/ruby:3.3-node
+            environment:
+              RAILS_ENV: test
+        steps:
+          - checkout
+          - run:
+              name: Install System Dependencies for Playwright
+              command: |
+                sudo apt-get update && sudo apt-get install -y \
+                libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+                libxcomposite1 libxdamage1 libgbm1 libpango-1.0-0 libxrandr2 \
+                libcups2 libdrm2 libxshmfence1 libasound2
+          - run:
+              name: Install Frontend Dependencies
+              command: cd frontend && npm ci
+          - run:
+              name: Install Playwright Browsers
+              command: cd frontend && npx playwright install
           - run:
               name: Install Bundler
               command: gem install bundler
-
           - run:
-              name: Install Gems
-              command: |
-                cd backend
-                bundle config set path 'vendor/bundle'
-                bundle install --jobs=4 --retry=3
-
-          - save_cache:
-              paths:
-                - backend/vendor/bundle
-              key: v1-backend-dependencies-{{ checksum "backend/Gemfile.lock" }}
-
+              name: Install Rails Gems
+              command: cd backend && bundle install
           - run:
-              name: Setup Database
-              command: |
-                cd backend
-                bundle exec rails db:setup
-
+              name: Start Rails Backend
+              command: cd backend && rails server -e test -p 3000
+              background: true
           - run:
-              name: Run RSpec Tests
-              command: |
-                cd backend
-                bundle exec rspec
-
-      test_frontend:
-        docker:
-          - image: node:18
-        steps:
-          - checkout
-
-          - restore_cache:
-              keys:
-                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-                - v1-frontend-dependencies-
-
+              name: Start Nuxt Frontend
+              command: cd frontend && npx nuxi dev -p 3001
+              background: true
           - run:
-              name: Install Node.js Dependencies
-              command: |
-                cd frontend
-                npm ci
-
-          - save_cache:
-              paths:
-                - frontend/node_modules
-              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-
+              name: Wait for Services to Start
+              command: sleep 10
           - run:
-              name: Run Vitest Tests
-              command: |
-                cd frontend
-                npx vitest run spec/components
-
-      test_playwright:
-        docker:
-          - image: mcr.microsoft.com/playwright:latest
-        steps:
-          - checkout
-
-          - restore_cache:
-              keys:
-                - v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-                - v1-frontend-dependencies-
-
-          - run:
-              name: Install Node.js Dependencies
-              command: |
-                cd frontend
-                npm ci
-
-          - save_cache:
-              paths:
-                - frontend/node_modules
-              key: v1-frontend-dependencies-{{ checksum "frontend/package-lock.json" }}
-
-          - run:
-              name: Start Backend Server
-              command: |
-                cd backend
-                rails server -p 3000 &
-
-          - run:
-              name: Start Playwright Tests
-              command: |
-                cd frontend
-                npx playwright test spec/e2e 
+              name: Run Playwright Tests
+              command: cd frontend && npx playwright test spec/e2e
 
     workflows:
       version: 2
-      test:
+      test_workflow:
         jobs:
-          - test_backend
-          - test_frontend
-          - test_playwright
+          - vitest
+          - playwright
     ```
 2. Let's commit these changes, push them up and run Playwright on CircleCI:
     - `git add .`

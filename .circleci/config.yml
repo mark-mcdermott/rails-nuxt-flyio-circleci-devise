@@ -16,50 +16,8 @@ jobs:
           name: Run Vitest
           command: cd frontend && npx vitest spec/components
 
-  playwright:
-    docker:
-      - image: cimg/ruby:3.3-node
-        environment:
-          RAILS_ENV: test
-    steps:
-      - checkout
-      - run:
-          name: Install System Dependencies for Playwright
-          command: |
-            sudo apt-get update && sudo apt-get install -y \
-            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
-            libxcomposite1 libxdamage1 libgbm1 libpango-1.0-0 libxrandr2 \
-            libcups2 libdrm2 libxshmfence1 libasound2
-      - run:
-          name: Install Frontend Dependencies
-          command: cd frontend && npm ci
-      - run:
-          name: Install Playwright Browsers
-          command: cd frontend && npx playwright install
-      - run:
-          name: Install Bundler
-          command: gem install bundler
-      - run:
-          name: Install Rails Gems
-          command: cd backend && bundle install
-      - run:
-          name: Start Rails Backend
-          command: cd backend && rails server -e test -p 3000
-          background: true
-      - run:
-          name: Start Nuxt Frontend
-          command: cd frontend && npx nuxi dev -p 3001
-          background: true
-      - run:
-          name: Wait for Services to Start
-          command: sleep 10
-      - run:
-          name: Run Playwright Tests
-          command: cd frontend && npx playwright test spec/e2e
-
 workflows:
   version: 2
   test_workflow:
     jobs:
       - vitest
-      - playwright
