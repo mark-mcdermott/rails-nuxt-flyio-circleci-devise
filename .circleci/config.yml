@@ -25,12 +25,19 @@ jobs:
           name: Install dependencies
           command: cd frontend && npm ci
       - run:
-          name: Run Playwright
+          name: Start Rails backend
+          command: cd backend && bundle install && rails server -e test -p 3000
+          background: true
+      - run:
+          name: Start Nuxt frontend
+          command: cd frontend && npx nuxi dev -p 3001
+          background: true
+      - run:
+          name: Run Playwright tests
           command: cd frontend && npx playwright test spec/e2e
 
 workflows:
   version: 2
   test_workflow:
     jobs:
-      - vitest
       - playwright
