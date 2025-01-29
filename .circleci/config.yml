@@ -24,8 +24,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Bundler
-          command: apt-get update && apt-get install -y ruby-full && gem install bundler
+          name: Switch to Root for Ruby Installation
+          command: sudo apt-get update && sudo apt-get install -y ruby-full && sudo gem install bundler
       - run:
           name: Install Rails dependencies
           command: cd backend && bundle install
