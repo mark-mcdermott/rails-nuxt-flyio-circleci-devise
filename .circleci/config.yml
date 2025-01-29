@@ -18,7 +18,7 @@ jobs:
 
   playwright:
     docker:
-      - image: ruby:3.3.0-slim-bullseye
+      - image: cimg/ruby:3.3-node
         environment:
           RAILS_ENV: test
     steps:
@@ -39,6 +39,9 @@ jobs:
       - run:
           name: Install Frontend Dependencies
           command: cd frontend && npm ci
+      - run:
+          name: Install Playwright Browsers
+          command: cd frontend && npx playwright install
       - run:
           name: Start Rails Backend
           command: cd backend && rails server -e test -p 3000
