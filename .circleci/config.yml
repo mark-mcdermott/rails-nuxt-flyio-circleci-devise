@@ -67,13 +67,13 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            gem install bundler && bundle install
+            cd backend && gem install bundler && bundle install
       - run:
           name: Run Database Setup
-          command: bin/rails db:create db:migrate
+          command: cd backend && bin/rails db:create db:migrate
       - run:
           name: Run RSpec
-          command: rspec
+          command: cd backend && rspec
 
 workflows:
   version: 2
