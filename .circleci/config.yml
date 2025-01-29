@@ -24,8 +24,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Switch to Root for Ruby Installation
+          name: Switch to Root for Ruby Setup
           command: sudo apt-get update && sudo apt-get install -y ruby-full && sudo gem install bundler
+      - run:
+          name: Grant Permissions to Gems Cache
+          command: sudo chmod -R 777 /var/lib/gems/3.0.0/cache
       - run:
           name: Install Rails dependencies
           command: cd backend && bundle install
