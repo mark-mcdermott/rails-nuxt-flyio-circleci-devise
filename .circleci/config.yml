@@ -79,5 +79,4 @@ workflows:
   version: 2
   test_workflow:
     jobs:
-      - vitest
-      - playwright
+      - rspec
