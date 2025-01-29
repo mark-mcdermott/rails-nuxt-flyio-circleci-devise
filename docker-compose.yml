@@ -1,0 +1,10 @@
+# docker-compose.yml
+
+services:
+
+  vitest:
+    image: cimg/node:18.18
+    working_dir: /app/frontend
+    command: bash -c "npm ci && npx nuxi prepare && npx vitest spec/components"
+    volumes:
+      - .:/app

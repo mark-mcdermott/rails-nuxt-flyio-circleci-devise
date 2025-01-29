@@ -1,0 +1,21 @@
+jobs:
+  vitest:
+    docker:
+      - image: cimg/node:18.18
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: cd frontend && npm ci
+      - run:
+          name: Generate Nuxt files
+          command: cd frontend && npx nuxi prepare
+      - run:
+          name: Run Vitest
+          command: cd frontend && npx vitest spec/components
+
+workflows:
+  version: 2
+  test_workflow:
+    jobs:
+      - vitest
