@@ -609,8 +609,6 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     ```
 3. Run RSpec locally:
     - `rspec` (1 test should run and pass)
-4. Let's redeploy our backend now
-    - `fly deploy`
 5. `cd ..`
 
 # RSpec On Local Docker
@@ -783,3 +781,14 @@ Here we'll create a simple RSpec test for the Rails HelloController. Then we'll 
     - `git add .`
     - `git commit -m "Add RSpec"`
     - `git push` (rspec, vitest and playwright should all be green and passing on CircleCI)
+
+## Redeploy To Fly.io
+It's time to redeploy our app and make sure all the changes we've been making haven't broken prod. It's ok to do these two steps at the same time if you want.
+1. Let's redeploy our backend:
+    - `cd backend`
+    - `fly deploy`
+2. Let's redeploy our frontend
+    - `cd .../frontend`
+    - `fly deploy`
+3. Go to your frontend app url in a browser.
+    - You should see "Hello from Nuxt!" and "Hello from Rails!"
