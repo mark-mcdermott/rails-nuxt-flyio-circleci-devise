@@ -24,8 +24,12 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Playwright System Dependencies
-          command: sudo npx --yes playwright install-deps --unsafe-perm
+          name: Install System Dependencies for Playwright
+          command: |
+            apt-get update && apt-get install -y \
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
+            libxcomposite1 libxdamage1 libgbm1 libpango-1.0-0 libxrandr2 \
+            libcups2 libdrm2 libxshmfence1 libasound2
       - run:
           name: Install Frontend Dependencies
           command: cd frontend && npm ci
