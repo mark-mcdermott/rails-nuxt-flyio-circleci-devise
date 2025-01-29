@@ -92,3 +92,5 @@ workflows:
   test_workflow:
     jobs:
       - rspec
+      - vitest
+      - playwright
