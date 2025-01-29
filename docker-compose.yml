@@ -8,3 +8,33 @@ services:
     command: bash -c "npm ci && npx nuxi prepare && npx vitest spec/components"
     volumes:
       - .:/app
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  rspec:
+    image: cimg/ruby:3.3-node
+    working_dir: /app/backend
+    environment:
+      RAILS_ENV: test
+      DB_HOST: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: 5432
+    command: bash -c "./wait-for-it.sh db:5432 -- bundle install && bin/rails db:create db:migrate && rspec"
+    volumes:
+      - .:/app
+      - ./wait-for-it.sh:/app/backend/wait-for-it.sh
+    depends_on:
+      db:
+        condition: service_healthy
