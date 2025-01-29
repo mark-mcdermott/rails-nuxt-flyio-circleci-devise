@@ -28,8 +28,8 @@ jobs:
           command: |
             node -v && npm -v
       - run:
-          name: Install Frontend Dependencies
-          command: cd frontend && npm ci
+          name: Install Playwright System Dependencies
+          command: sudo npx playwright install-deps
       - run:
           name: Install Playwright Browsers
           command: cd frontend && npx playwright install
