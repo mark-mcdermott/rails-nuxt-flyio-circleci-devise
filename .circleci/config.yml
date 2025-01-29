@@ -18,36 +18,36 @@ jobs:
 
   playwright:
     docker:
-      - image: cimg/node:18.18
+      - image: ruby:3.3.0-slim-bullseye 
         environment:
           RAILS_ENV: test
+      - image: cimg/node:18.18 
     steps:
       - checkout
       - run:
-          name: Switch to Root for Ruby Setup
-          command: sudo apt-get update && sudo apt-get install -y ruby-full && sudo gem install bundler
+          name: Install Dependencies
+          command: |
+            apt-get update && apt-get install -y nodejs npm build-essential
+            gem install bundler
       - run:
-          name: Grant Permissions to Gems Cache
-          command: sudo chmod -R 777 /var/lib/gems/3.0.0/cache
-      - run:
-          name: Install Rails dependencies
+          name: Install Rails Gems
           command: cd backend && bundle install
       - run:
-          name: Start Rails backend
+          name: Start Rails Backend
           command: cd backend && rails server -e test -p 3000
           background: true
       - run:
-          name: Install Nuxt dependencies
+          name: Install Frontend Dependencies
           command: cd frontend && npm ci
       - run:
-          name: Start Nuxt frontend
+          name: Start Nuxt Frontend
           command: cd frontend && npx nuxi dev -p 3001
           background: true
       - run:
-          name: Wait for services to start
+          name: Wait for Services to Start
           command: sleep 10
       - run:
-          name: Run Playwright tests
+          name: Run Playwright Tests
           command: cd frontend && npx playwright test spec/e2e
 
 workflows:
