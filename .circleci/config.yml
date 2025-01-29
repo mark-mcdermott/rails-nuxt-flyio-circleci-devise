@@ -72,9 +72,8 @@ jobs:
       - run:
           name: Wait for Database
           command: |
-            until pg_isready -h db -p 5432 -U postgres; do
-              echo "Waiting for PostgreSQL to be ready..."
-              sleep 2
+            for i in {1..30}; do
+              pg_isready -h db -p 5432 -U postgres && break || sleep 2;
             done
       - run:
           name: Install Dependencies
@@ -82,7 +81,8 @@ jobs:
             cd backend && gem install bundler && bundle install
       - run:
           name: Run Database Setup
-          command: cd backend && bin/rails db:create db:migrate
+          command: |
+            cd backend && bin/rails db:create db:migrate
       - run:
           name: Run RSpec
           command: cd backend && rspec
