@@ -113,7 +113,6 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     ```
     # docker-compose.yml
 
-    version: '3.8'
     services:
       nuxt-vitest:
         build:
@@ -154,7 +153,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - `git commit -m "Add Vitest"`
     - `git push`
     - Then the tests will start on CircleCI
-    - The `test` step should show green with one test passing
+    - The `vitest` step should show green with one test passing
 
 ## Tweak Frontend To Talk To Backend
 1. Let's configure our `nuxt.config.ts` to talk to the backend:
@@ -192,12 +191,35 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     });
     </script>
     ```
+3. Let's update our component test to match the new html:
+    ```
+    // frontend/spec/components/hello.nuxt.spec.ts
+
+    import { it, expect, vi } from 'vitest'
+    import { mountSuspended } from '@nuxt/test-utils/runtime'
+    import { Hello } from '#components'
+
+    global.fetch = vi.fn(() =>
+        Promise.resolve({
+            json: () => Promise.resolve({ message: 'Hello from Rails!' }),
+        })
+    )
+
+    it('can mount some component', async () => {
+        const component = await mountSuspended(Hello)
+        expect(component.html()).toMatchInlineSnapshot(`
+            "<p data-testid="backend-message">Hello from Rails!</p>
+            <p data-testid="frontend-message">Hello from Nuxt!</p>"
+          `)
+    })
+    ```
 3. Before we setup the backend, let's double check Vitest is still passing locally, on local Docker and on CircleCI.
     - locally:
       - `npx vitest spec/components` (1 test should pass)
     - local docker:
       - `cd ..`
-      - TODO: `docker-compose` commands here
+      - `docker-compose build`
+      - `docker-compose up`
     - CircleCI:
       - `git add .`
       - `git commit -m "Setup frontend to talk to backend"`
