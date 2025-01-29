@@ -13,6 +13,9 @@ jobs:
           name: Install dependencies
           command: npm ci
       - run:
+          name: Generate Nuxt files
+          command: npx nuxi prepare
+      - run:
           name: Run Vitest
           command: npx vitest spec/components
 
