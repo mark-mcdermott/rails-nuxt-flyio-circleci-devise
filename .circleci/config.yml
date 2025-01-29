@@ -1,5 +1,7 @@
+# .circleci/config.yml
+
 jobs:
-  test:
+  vitest:
     docker:
       - image: cimg/node:18.18
     steps:
@@ -14,8 +16,21 @@ jobs:
           name: Run Vitest
           command: cd frontend && npx vitest spec/components
 
+  playwright:
+    docker:
+      - image: cimg/node:18.18
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: cd frontend && npm ci
+      - run:
+          name: Run Playwright
+          command: cd frontend && npx playwright test spec/e2e
+
 workflows:
   version: 2
   test_workflow:
     jobs:
-      - test
+      - vitest
+      - playwright
