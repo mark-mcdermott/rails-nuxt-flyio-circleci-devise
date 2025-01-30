@@ -815,6 +815,130 @@ It's time to redeploy our app and make sure all the changes we've been making ha
 ```
 require: rubocop-rails
 Style/Documentation:
-  Enabled: false
+  Enabled: false`
 ```
-- `rubocop -A`
+- `rubocop -A
+
+## RSpec Matchers
+- `bundle add rspec-rails shoulda-matchers --group "development, test"`
+- make `~/app/backend/spec/rails_helper.rb` look like this:
+```
+# frozen_string_literal: true
+
+require 'spec_helper'
+ENV['RAILS_ENV'] ||= 'test'
+require_relative '../config/environment'
+abort("The Rails environment is running in production mode!") if Rails.env.production?
+require 'rspec/rails'
+require 'shoulda/matchers'
+
+begin
+  ActiveRecord::Migration.maintain_test_schema!
+rescue ActiveRecord::PendingMigrationError => e
+  abort e.to_s.strip
+end
+
+RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+
+  config.use_transactional_fixtures = false
+
+  config.before(:each) do
+    Rails.application.routes.default_url_options[:host] = 'http://localhost:3000'
+  end
+
+  config.infer_spec_type_from_file_location!
+  config.filter_rails_from_backtrace!
+end
+
+Shoulda::Matchers.configure do |config|
+  config.integrate do |with|
+    with.test_framework :rspec
+    with.library :rails
+  end
+end
+```
+
+### Factory Bot
+- `cd ~/app/backend`
+- `bundle add factory_bot_rails --group "development, test"`
+- `bundle install`
+- `mkdir spec/factories`
+- we will wait to create the user factory until Devise creates it for us automatically when we use Devise to generate the user model
+
+### Health Status Controller Test
+- `cd ~/app/backend`
+- `mkdir -p spec/requests/api/v1`
+- `touch spec/requests/api/v1/health_controller_spec.rb`
+- make `~/app/backend/spec/requests/api/v1/health_controller_spec.rb` look like this:
+```
+require 'rails_helper'
+
+RSpec.describe "Api::V1::HealthControllers", type: :request do
+  describe "GET /api/v1/up" do
+    it "returns http success" do
+      get "/api/v1/up"
+      expect(response).to have_http_status(:success)
+    end
+  end
+end
+```
+- `rspec spec/requests/api/v1/health_controller_spec.rb` -> should pass
+
+### Health Status Controller
+- Rails comes with a built-in health controller api at `/up`. We're going to move it to `/api/v1/up` because all our API urls will be prefixed with `/api/v1`, which is pretty common for APIs.
+- `cd ~/app/backend`
+- `mkdir -p app/controllers/api/v1`
+- `touch app/controllers/api/v1/health_controller.rb`
+- make `~/app/controllers/api/v1/health_controller.rb` look like this:
+```
+class Api::V1::HealthController < ApplicationController
+  def show
+    render json: { status: 'OK' }, status: :ok
+  end
+end
+```
+- make `~/app/backend/config/routes.rb` look like this:
+```
+# frozen_string_literal: true
+
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      get 'up' => 'health#show'
+    end
+  end
+end
+```
+
+### ESLint AutoSave
+- We'll use [ESLint](https://eslint.org) to keep our JavaScript clean looking. Specifically, we'll use [antfu's eslint-config](https://github.com/antfu/eslint-config) which are nice presets including auto-fix on save and a nice one line CLI install tool.
+- install VSCode extension `ESLint`
+- `cd ~/app`
+- `npm init` (hit enter for all prompts)
+- `pnpm dlx @antfu/eslint-config@latest`
+  - uncommitted changes, continue? `yes`
+  - framework: `Vue`
+  - extra utils: `none`
+  - update `.vscode/settings.json`: `yes`
+- `npm install`
+- open `~/app/package.json`
+  - you should see some red underlines for ESLint violations
+  - hit `command + s` to save and you should see ESLint automatically fix the issues
+
+  ### ESLint Commands
+- `cd ~/app/frontend`
+- `pnpm dlx @antfu/eslint-config@latest`
+  - uncommitted changes, continue? `yes`
+  - framework: `Vue`
+  - extra utils: `none`
+  - update `.vscode/settings.json`: `no`
+- `npm install`
+- in `~/app/frontend/package.json` in the `scripts` section add:
+```
+"lint": "npx eslint .",
+"lint:fix": "npx eslint . --fix"
+```
+- `npm run lint` -> it will flag a trailing comma issue on `nuxt.config.ts`
+- open `~/app/frontend/nuxt.config.ts`
+- `npm run lint:fix` -> you will see it add a trailing comma to fix the ESLint violation
