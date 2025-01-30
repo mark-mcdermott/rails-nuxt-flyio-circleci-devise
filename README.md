@@ -1,14 +1,16 @@
 # Barebones Rails, Nuxt and Fly.io Tutorial
-### With RSpec, Vitest and Playwright Tests on CircleCI
-
-Here we’ll make a MVP (“minimum viable product”) of a rails API-only backend with rspec tests that talks to a nuxt frontend with vitest component tests and playwright end-to-end tests. This will have close to no functionality and no styling, but everything will be wired together correctly and all three test suites will pass when run locally or on CircleCI.
+### With RSpec, Vitest, Playwright, CircleCI & Devise
+Here we’ll make a MVP (“minimum viable product”) of a rails API-only backend with rspec tests that talks to a nuxt frontend with vitest component tests and playwright end-to-end tests. We'll use Devise for auth.
 
 Prereqs (stuff you'll need installed that I don't go over here):
 - Postgres
 - Desktop Docker
 - Rails, Nuxt, Ruby, Node, NPM, Bundler
 
-# Local Preliminary App Setup
+# Part I: Wiring Everything Together
+ This part will have close to no functionality and no styling, but everything will be wired together correctly and all three test suites will pass when run locally or on CircleCI.
+
+## Local Preliminary App Setup
 1. Create app directory:
     - `mkdir app`
     - `cd app`
@@ -800,3 +802,19 @@ It's time to redeploy our app and make sure all the changes we've been making ha
     - `fly deploy`
 3. Go to your frontend app url in a browser.
     - You should see "Hello from Nuxt!" and "Hello from Rails!"
+
+# Part II: Mobile Components & Devise
+
+## Rubocop
+- `cd ~/app/backend`
+- install VSCode extentions `Ruby LSP` and `Rubocop`
+- `bundle add rubocop-rails`
+- `bundle install`
+- `touch .rubocop.yml`
+- to `.rubocop.yml` add:
+```
+require: rubocop-rails
+Style/Documentation:
+  Enabled: false
+```
+- `rubocop -A`
