@@ -52,6 +52,7 @@ Prereqs (stuff you'll need installed that I don't go over here):
     - `app.vue`
     ```
     <!--- frontend/app.vue -->
+    
     <template>
       <Hello />
     </template>
