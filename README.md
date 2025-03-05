@@ -916,6 +916,7 @@ Rails.application.routes.draw do
 end
 ```
 - `rspec spec/requests/api/v1/health_controller_spec.rb` -> should pass
+- `cd ..`
 
 ### ESLint AutoSave
 - We'll use [ESLint](https://eslint.org) to keep our JavaScript clean looking. Specifically, we'll use [antfu's eslint-config](https://github.com/antfu/eslint-config) which are nice presets including auto-fix on save and a nice one line CLI install tool.
