@@ -309,6 +309,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - `rails server`
 2. Run the Nuxt app in terminal 2:
     - `cd frontend`
+    - `npm install` (shouldn't be necessary, but is for me or I get architecture errors here)
     - `npm run dev` (at `http://localhost:3001` you should see "Hello from Rails!" and "Hello from Nuxt!")
       - If you only see "Hello from Nuxt!" and not "Hello from Rails!", don't panic. In my experience, sometimes the backend starts up properly right away and other times it can take about 5 minutes.
 3. Stop the frontend and the backend servers by pressing `command + c` in their respective terminals.
