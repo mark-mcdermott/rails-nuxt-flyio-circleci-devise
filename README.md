@@ -823,7 +823,7 @@ Style/Documentation:
 - `rubocop -A`
 
 ## RSpec Matchers
-- `bundle add rspec-rails shoulda-matchers --group "development, test"`
+- `bundle add shoulda-matchers --group "development, test"`
 - make `~/app/backend/spec/rails_helper.rb` look like this:
 ```
 # frozen_string_literal: true
