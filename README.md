@@ -818,7 +818,7 @@ It's time to redeploy our app and make sure all the changes we've been making ha
 ```
 require: rubocop-rails
 Style/Documentation:
-  Enabled: false`
+  Enabled: false
 ```
 - `rubocop -A
 
