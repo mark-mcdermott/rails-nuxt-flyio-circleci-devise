@@ -453,7 +453,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
 ## Playwright Docker
 I was unable to get playwright working on docker on my computer. I ran into issues with ARM64 incompatability with the appropriate Docker images and wasn't able to figure out a way around them. **So just skip this part**.
 
-But if you're feeling intrepid, chaning the `docker-compose.yml` to something like this might get you partway there:
+But if you're feeling intrepid, changing the `docker-compose.yml` to something like this might get you partway there:
 
 ```
 # docker-compose.yml
