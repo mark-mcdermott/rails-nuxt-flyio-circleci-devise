@@ -824,6 +824,7 @@ Style/Documentation:
 
 ## RSpec Matchers
 - `bundle add shoulda-matchers --group "development, test"`
+- `bundle install`
 - make `~/app/backend/spec/rails_helper.rb` look like this:
 ```
 # frozen_string_literal: true
