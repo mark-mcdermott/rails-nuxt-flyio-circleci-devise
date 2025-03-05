@@ -798,7 +798,7 @@ It's time to redeploy our app and make sure all the changes we've been making ha
     - `cd backend`
     - `fly deploy`
 2. Let's redeploy our frontend
-    - `cd .../frontend`
+    - `cd ../frontend`
     - `fly deploy`
 3. Go to your frontend app url in a browser.
     - You should see "Hello from Nuxt!" and "Hello from Rails!"
