@@ -15,7 +15,7 @@ Prereqs (stuff you'll need installed that I don't go over here):
     - `mkdir app`
     - `cd app`
 2. Initialize git repo:
-    - `git init` (hit enter for all prompts)
+    - `git init`
 3. Let's create some blank files for app secrets (like the PostgreSQL connection details) and for non-secret app info.
     - `touch .gitignore .secrets .appinfo`
 4. Let's add `.secrets` and `.appinfo` to our `.gitignore`:
