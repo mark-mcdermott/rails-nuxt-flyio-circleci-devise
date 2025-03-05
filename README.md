@@ -228,6 +228,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     ```
 3. Before we setup the backend, let's double check Vitest is still passing locally, on local Docker and on CircleCI.
     - locally:
+      - `npm install` (shouldn't be necessary here, but it is for me or I get architecture errors here)
       - `npx vitest spec/components` (1 test should pass)
     - local docker:
       - `cd ..`
