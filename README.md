@@ -946,6 +946,6 @@ end
 "lint": "npx eslint .",
 "lint:fix": "npx eslint . --fix"
 ```
-- `npm run lint` -> it will flag a trailing comma issue on `nuxt.config.ts`
-- open `~/app/frontend/nuxt.config.ts`
-- `npm run lint:fix` -> you will see it add a trailing comma to fix the ESLint violation
+- `npm run lint` -> it will flag many issues
+- `npm run lint:fix`
+- `npm run lint` -> you can see it fixed most of the issues
