@@ -437,7 +437,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - `mkdir spec/e2e`
     - `touch spec/e2e/hello.spec.ts`
     ```
-    // frontend/e2e/hello.spec.ts
+    // frontend/spec/e2e/hello.spec.ts
 
     import { test, expect } from '@playwright/test';
 
