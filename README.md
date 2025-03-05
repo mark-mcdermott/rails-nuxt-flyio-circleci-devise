@@ -323,8 +323,9 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
   - `fly auth login`
 
 ### Deploy Frontend
-1. In your `frontend/package.json` in the `scripts` section, add this line: `"start": "nuxt start",`
-2. Let's add our Fly.io configuration file, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. *Make sure to replace `<...>` with your app frontend name.* Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
+1. `cd frontend`
+2. In your `frontend/package.json` in the `scripts` section, add this line: `"start": "nuxt start",`
+3. Let's add our Fly.io configuration file, mostly, so it won't ask us what the app name and region are when we `fly launch`--it's a little faster this way. *Make sure to replace `<...>` with your app frontend name.* Also replace `dfw` in the `primary_region` with [your region code](https://fly.io/docs/reference/regions/).
     - `touch fly.toml`
     ```
     # frontend/fly.toml
@@ -347,14 +348,14 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
       cpu_kind = 'shared'
       cpus = 1
     ```
-3. `fly launch`
+4. `fly launch`
     - When it asks, "A fly.toml file was found. Would you like to copy its configuration to the new app?", press `y`
     - When it asks, "Do you want to tweak these settings before proceeding?", press `N` or enter
     - When `fly launch` if finished, look at the output for "Visit your newly deployed app at `<url>`" and copy/paste the url into the "frontend app url" line of your `.appinfo`
-4. Go to your frontend app url in a browser.
+5. Go to your frontend app url in a browser.
     - You should see "Hello from Nuxt!", but not "Hello from Rails!"
     - In the console, there will be a failed request to the backend (becuase they backend's not deployed yet)
-5. `cd ..` into the app's root directory
+6. `cd ..` into the app's root directory
 
 ### Deploy Backend
 1. `cd backend`
