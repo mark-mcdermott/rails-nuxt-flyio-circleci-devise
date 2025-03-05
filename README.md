@@ -52,7 +52,7 @@ Prereqs (stuff you'll need installed that I don't go over here):
     - `app.vue`
     ```
     <!--- frontend/app.vue -->
-    
+
     <template>
       <Hello />
     </template>
@@ -153,7 +153,6 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     - `git add .`
     - `git commit -m "Add Vitest"`
     - Create a new public repo in the github UI
-    - `git branch -M main`
     - From the github UI, get the repo's "web url" (the url that ends in `.git`, like `https://github.com/mark-mcdermott/testingtestinghaaay.git`)
     - `git remote add origin <repo web url>`
     - `git push -u origin main`
