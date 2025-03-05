@@ -820,7 +820,7 @@ require: rubocop-rails
 Style/Documentation:
   Enabled: false
 ```
-- `rubocop -A
+- `rubocop -A`
 
 ## RSpec Matchers
 - `bundle add rspec-rails shoulda-matchers --group "development, test"`
