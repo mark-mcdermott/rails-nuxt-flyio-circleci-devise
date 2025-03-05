@@ -909,6 +909,7 @@ end
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
+      get 'hello', to: 'hello#index'
       get 'up' => 'health#show'
     end
   end
