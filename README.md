@@ -1026,4 +1026,32 @@ end
 ```
 - `cd ..`
 
+## Add Capacitor
+- `cd frontend`
+- `npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios`
+- change `nuxt.config.ts` to:
+```
+// frontend/nuxt.config.ts
 
+export default defineNuxtConfig({
+  ssr: false,
+  app: { baseURL: './' },
+  build: { transpile: ['@capacitor/core'] },
+  devServer: { port: 3001, host: '0.0.0.0' },
+  runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1' } },
+  $production: { runtimeConfig: { public: { apiURL: 'https://app001-backend.fly.dev/api/v1' } } },
+  modules: ['@nuxt/test-utils/module'],
+  compatibilityDate: '2025-03-05',
+})
+```
+- `npx cap init`
+  - app name: something like `app001`
+  - app package ID: anything
+  - web asset directory: `.output/public`
+- `npx cap add android`
+- `npx cap add ios`
+- `npm run generate`
+- `npx cap copy`
+- `npx cap open android` (opens android studio)
+- `npx cap open ios` (opens xcode)
+- `npx cap run ios` (runs ios simulator)
