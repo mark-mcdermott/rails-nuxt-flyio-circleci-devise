@@ -7,7 +7,7 @@ Prereqs (stuff you'll need installed that I don't go over here):
 - Desktop Docker
 - Rails, Nuxt, Ruby, Node, NPM, Bundler
 
-# Part I: Wiring Everything Together
+# Part I: Wiring Things Together: Rails, RSpec, Nuxt, Vitest, Playwright, CircleCI and Fly.io
  This part will have close to no functionality and no styling, but everything will be wired together correctly and all three test suites will pass when run locally or on CircleCI.
 
 ## Local Preliminary App Setup
@@ -176,7 +176,7 @@ Now from the root directory of our app, let's setup Vitest for CircleCI.
     // frontend/nuxt.config.ts
 
     export default defineNuxtConfig({
-      server: { port: 3001, host: '0.0.0.0' },
+      devServer: { port: 3001, host: '0.0.0.0' },
       runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1'}},
       $production: { runtimeConfig: { public: { apiURL: 'https://<app backend name>.fly.dev/api/v1' }}},
       modules: ['@nuxt/test-utils/module']
@@ -806,8 +806,6 @@ It's time to redeploy our app and make sure all the changes we've been making ha
 3. Go to your frontend app url in a browser.
     - You should see "Hello from Nuxt!" and "Hello from Rails!"
 
-# Part II: Mobile Components & Devise
-
 ## Rubocop
 - `cd ~/app/backend`
 - install VSCode extentions `Ruby LSP` and `Rubocop`
@@ -949,3 +947,81 @@ end
 - `npm run lint` -> it will flag many issues
 - `npm run lint:fix`
 - `npm run lint` -> you can see it fixed most of the issues
+- `cd ..`
+
+# Part II: Pages/Layout, Capacitor, Auth and ThingUI 
+
+## Pages/Layout
+- `cd frontend`
+- `mkdir pages`
+- `touch pages/index.vue pages/public.vue pages/private.vue`
+- make `~/app/frontend/pages/index.vue` look like this:
+```
+<!-- frontend/pages/index.vue -->
+
+<template>
+  <div>
+    <h1>Home</h1>
+    <p>Home copy</p>
+  </div>
+</template>
+```
+- make `~/app/frontend/pages/public.vue` look like this:
+```
+<!-- frontend/pages/public.vue -->
+
+<template>
+  <div>
+    <h1>Public</h1>
+    <p>Public copy</p>
+  </div>
+</template>
+```
+- make `~/app/frontend/pages/private.vue` look like this:
+```
+<!-- frontend/pages/private.vue -->
+
+<template>
+  <div>
+    <h1>Private</h1>
+    <p>Private copy</p>
+  </div>
+</template>
+```
+- `touch components/Header.vue`
+```
+<!-- frontend/components/Header.vue -->
+
+<template>
+  <nav>
+    <ul>
+      <li>
+        <NuxtLink to="/">
+          Home
+        </NuxtLink>
+      </li>
+      <li>
+        <NuxtLink to="/public">
+          Public
+        </NuxtLink>
+      </li>
+      <li>
+        <NuxtLink to="/private">
+          Private
+        </NuxtLink>
+      </li>
+    </ul>
+  </nav>
+</template>
+```
+- make `~/frontend/app.vue` look like this:
+```
+<!-- frontend/app.vue -->
+
+<template>
+  <Header />
+  <NuxtPage />
+  <Hello />
+</template>
+```
+
