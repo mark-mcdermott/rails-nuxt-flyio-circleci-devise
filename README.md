@@ -949,9 +949,9 @@ end
 - `npm run lint` -> you can see it fixed most of the issues
 - `cd ..`
 
-# Part II: Pages/Layout, Capacitor, Auth and ThingUI 
+# Part II: Pages, Capacitor, Auth and ThingUI 
 
-## Pages/Layout
+## Add Pages
 - `cd frontend`
 - `mkdir pages`
 - `touch pages/index.vue pages/public.vue pages/private.vue`
@@ -1024,4 +1024,6 @@ end
   <Hello />
 </template>
 ```
+- `cd ..`
+
 
