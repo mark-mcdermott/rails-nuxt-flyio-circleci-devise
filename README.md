@@ -1026,32 +1026,68 @@ end
 ```
 - `cd ..`
 
-## Add Capacitor
-- `cd frontend`
-- `npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios`
-- change `nuxt.config.ts` to:
+## Flutter With WebViews
+- `cd` into the root folder of our app if you're not there already
+- `flutter create flutter_app`
+- `cd flutter_app`
+- `flutter pub add webview_flutter`
+- Let's modify `flutter_app/lib/main.dart` to load our web app (*And make sure to swap in our `<frontend web url>` towards the bottom*):
 ```
-// frontend/nuxt.config.ts
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-export default defineNuxtConfig({
-  ssr: false,
-  app: { baseURL: './' },
-  build: { transpile: ['@capacitor/core'] },
-  devServer: { port: 3001, host: '0.0.0.0' },
-  runtimeConfig: { public: { apiURL: 'http://localhost:3000/api/v1' } },
-  $production: { runtimeConfig: { public: { apiURL: 'https://app001-backend.fly.dev/api/v1' } } },
-  modules: ['@nuxt/test-utils/module'],
-  compatibilityDate: '2025-03-05',
-})
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final WebViewController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse('<frontend app url>'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: SafeArea(
+          child: WebViewWidget(controller: controller),
+        ),
+      ),
+    );
+  }
+}
 ```
-- `npx cap init`
-  - app name: something like `app001`
-  - app package ID: anything
-  - web asset directory: `.output/public`
-- `npx cap add android`
-- `npx cap add ios`
-- `npm run generate`
-- `npx cap copy`
-- `npx cap open android` (opens android studio)
-- `npx cap open ios` (opens xcode)
-- `npx cap run ios` (runs ios simulator)
+- Let's setup an android emulator:
+  - Open android studio
+  - Tools -> Device Manager
+  - Click the "plus" icon to create a new device -> Create Virtual Device
+  - Pick the latest phone that doesn't have the play store icon in the Play column. Right now, that's Pixel 6 Pro -> Next
+  - Click the Additional Settings tab
+  - Scroll down to the bottom where it says Emulated Performance
+  - For graphics acceleration, select Hardware
+  - For RAM enter `4` for GB
+  - Click Finish
+  - Start the emulator you just created in the Device Manager area by clicking the play icon to the right of your new emulator's name
+- Let's setup an iPhone simulator:
+  - Open XCode
+  - XCode -> Open Developer Tool -> Simulator
+  - That should open the iPhone simulator
+- `flutter devices` <- you should see both the android emulator and the iphone simulator listed there (and probably other stuff too).
+  - note the ids of the android emulator and the iphone simulator. The id is the first thing to the right of the device name. For me the android emulator id is `emulator-5554` and the iphone simulator id is `36C6816E-25E8-4669-9505-2A9A2BC9CD47`
+- open two terminal tabs
+  - in the first tab run `flutter run -d <iphone simulator id>`
+  - in the second tab run `flutter run -d <android emulator id>`
