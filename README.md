@@ -1541,3 +1541,453 @@ const submit = handleSubmit(async (_) => {
   </Page>
 </template>
 ```
+## Devise
+- `cd ~/app/backend`
+- `rails db:create` (or `rails db:drop db:create` if you already have a database called `backend`)
+- `bundle add devise devise-jwt jsonapi-serializer`
+- `bundle install`
+- `rails generate devise:install`
+- in `~/app/backend/config/environments/development.rb`, near the other `action_mailer` lines add:
+```
+config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+```
+- in `~/app/backend/config/initializers/devise.rb` uncomment the `config.navigational_format` line and make that line look like this:
+```
+config.navigational_formats = []
+```
+- to avoid a `Your application has sessions disabled. To write to the session you must first configure a session store` error, in `~/app/backend/config/application.rb` add this near the other `config.` lines:
+```
+    config.session_store :cookie_store, key: '_interslice_session'
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use config.session_store, config.session_options
+```
+
+### User Model
+- `cd ~/app/backend`
+- `rails g migration EnableUuid`
+- add `enable_extension 'pgcrypto'` to `~/app/backend/db/migrate/<timestamp>_enable_uuuid.rb` inside the `change` method
+- `rails db:migrate`
+- `rails generate devise User`
+- make `~/app/backend/db/<timestamp>_devise_create_users.rb` look like this:
+```
+# frozen_string_literal: true
+
+class DeviseCreateUsers < ActiveRecord::Migration[7.1]
+  def change
+    create_table :users do |t|
+      ## Database authenticatable
+      t.string :email,              null: false, default: ""
+      t.string :encrypted_password, null: false, default: ""
+
+      ## Custom additions I did
+      t.boolean :admin, default: false
+      t.uuid :uuid, index: { unique: true }
+
+      ## Recoverable
+      t.string   :reset_password_token
+      t.datetime :reset_password_sent_at
+
+      ## Rememberable
+      t.datetime :remember_created_at
+
+      ## Trackable
+      t.integer  :sign_in_count, default: 0, null: false
+      t.datetime :current_sign_in_at
+      t.datetime :last_sign_in_at
+      t.string   :current_sign_in_ip
+      t.string   :last_sign_in_ip
+
+      ## Confirmable
+      t.string   :confirmation_token
+      t.datetime :confirmed_at
+      t.datetime :confirmation_sent_at
+      t.string   :unconfirmed_email # Only if using reconfirmable
+
+      ## Lockable
+      t.integer  :failed_attempts, default: 0, null: false # Only if lock strategy is :failed_attempts
+      t.string   :unlock_token # Only if unlock strategy is :email or :both
+      t.datetime :locked_at
+
+      t.timestamps null: false
+    end
+
+    add_index :users, :email,                unique: true
+    add_index :users, :reset_password_token, unique: true
+    add_index :users, :confirmation_token,   unique: true
+    add_index :users, :unlock_token,         unique: true
+  end
+end
+```
+- `rails db:migrate`
+- make `~/app/backend/spec/factories/users.rb` look like this:
+```
+FactoryBot.define do
+  factory :user do
+    sequence(:email) { |n| "test#{n}@mail.com" }
+    password { 'password' }
+
+    trait :confirmed do
+      confirmed_at { Time.zone.now }
+    end
+  end
+end
+```
+
+### User Model Spec
+- I think at this point `~/app/backend/spec/models/user_spec.rb` is created, but mostly empty.
+- make `~/app/backend/spec/models/user_spec.rb` look like this:
+```
+# frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: users
+#
+# email                   :string     default(""), not null, index
+# encrypted_password      :string     default(""), not null
+# admin                   :boolean    not null
+# uuid                    :uuid       unique, index
+# reset_password_token    :string     unique, index
+# reset_password_sent_at  :datetime
+# remember_created_at     :datetime
+# sign_in_count           :integer    default(0), not null
+# current_sign_in_at      :datetime
+# last_sign_in_at         :datetime
+# current_sign_in_ip      :string
+# last_sign_in_ip         :string
+# confirmation_token      :string     index
+# confirmed_at            :datetime
+# confirmation_sent_at    :datetime
+# unconfirmed_email       :string
+# failed_attempts         :integer    default(0),not null
+# unlock_token            :string     unique, index
+# locked_at               :datetime
+# created_at              :datetime   not null
+# updated_at              :datetime   not null
+# jti                     :string     not null, unique, index
+
+require 'rails_helper'
+
+# Devise handles most validations internally, so I believe this is all we can test here
+RSpec.describe User, type: :model do
+  it { should validate_presence_of(:email) }
+  it { should validate_presence_of(:password) }
+end
+```
+
+### User Registration
+- `rails g devise:controllers api/v1/auth -c sessions registrations`
+- make `~/app/backend/config/routes.rb` look like this:
+```
+# frozen_string_literal: true
+
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      resources :users, param: :uuid
+      get 'up' => 'health#show'
+    end
+  end
+  devise_for :users, path: '', path_names: {
+    sign_in: 'api/v1/auth/login',
+    sign_out: 'api/v1/auth/logout',
+    registration: 'api/v1/auth/signup'
+  }, controllers: {
+    sessions: 'api/v1/auth/sessions',
+    registrations: 'api/v1/auth/registrations'
+  }
+end
+```
+
+### Users Controller
+- `cd ~/app/backend`
+- `touch app/controllers/api/v1/users_controller.rb`
+- make `~/app/backend/app/controllers/api/v1/users_controller.rb` look like this:
+```
+class Api::V1::UsersController < ApplicationController
+  before_action :set_user, only: %i[ show edit update destroy ]
+
+  # GET /users or /users.json
+  def index
+    @users = User.all
+    render json: @users
+  end
+
+  # GET /users/1 or /users/1.json
+  def show
+    render json: @user
+  end
+
+  # GET /users/new
+  def new
+    @user = User.new
+  end
+
+  # GET /users/1/edit
+  def edit
+  end
+
+  # POST /users or /users.json
+  def create
+    @user = User.new(user_params)
+
+    if @user.save
+      render json: @user, status: :created, location: @user
+    else
+      render json: @user.errors, status: :unprocessable_entity
+    end
+  end
+
+  # PATCH/PUT /users/1 or /users/1.json
+  def update
+    if @user.update(user_params)
+      render json: @user, status: :ok, location: @user
+    else
+      render json: @user.errors, status: :unprocessable_entity
+    end
+  end
+
+  # DELETE /users/1 or /users/1.json
+  def destroy
+    @user.destroy!
+    head :no_content
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_user
+      @user = User.find_by!(uuid: params[:uuid])
+    end
+
+    # Only allow a list of trusted parameters through.
+    def user_params
+      params.require(:user).permit(:uuid, :email, :password)
+    end
+end
+```
+
+### JWT
+- `cd ~/app/backend`
+- add this to `~/app/backend/config/initializers/devise.rb` right before the last `end`:
+```
+  config.jwt do |jwt|
+    # jwt.secret = Rails.application.credentials.fetch(:secret_key_base)
+    jwt.secret = ENV['SECRET_KEY_BASE'] || 'dummy_secret_key_for_tests'
+    jwt.dispatch_requests = [
+      ['POST', %r{^/api/v1/auth/login$}]
+    ]
+    jwt.revocation_requests = [
+      ['DELETE', %r{^/api/v1/auth//logout$}]
+    ]
+    jwt.expiration_time = 30.minutes.to_i
+  end
+```
+- `rails g migration addJtiToUsers jti:string:index:unique`
+- change `~/app/backend/db/migrate/<timestamp>_add_jti_to_users.rb` to include this:
+```
+  add_column :users, :jti, :string, null: false
+  add_index :users, :jti, unique: true
+```
+- make `~/app/backend/app/models/user.rb` look like this:
+```
+class User < ApplicationRecord
+  include Devise::JWT::RevocationStrategies::JTIMatcher
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable,
+         :confirmable, :lockable, :timeoutable, :trackable,
+         :jwt_authenticatable, jwt_revocation_strategy: self
+  before_create :set_uuid
+
+  private
+
+  def set_uuid
+    self.uuid = SecureRandom.uuid if uuid.blank?
+  end
+end
+```
+- `rails db:migrate`
+- `rails generate serializer user id email uuid`
+
+### Auth Controllers
+- `cd ~/app/backend`
+- make `~/app/backend/app/controllers/api/v1/auth/registrations_controller.rb` look like this:
+```
+class Api::V1::Auth::RegistrationsController < Devise::RegistrationsController
+  respond_to :json
+  private
+
+  def respond_with(resource, _opts = {})
+    if request.method == "POST" && resource.persisted?
+      render json: {
+        status: {code: 200, message: "Signed up sucessfully."},
+        data: UserSerializer.new(resource).serializable_hash[:data][:attributes]
+      }, status: :ok
+    elsif request.method == "DELETE"
+      render json: {
+        status: { code: 200, message: "Account deleted successfully."}
+      }, status: :ok
+    else
+      render json: {
+        status: {code: 422, message: "User couldn't be created successfully. #{resource.errors.full_messages.to_sentence}"}
+      }, status: :unprocessable_entity
+    end
+  end
+end
+```
+- make `~/app/backend/app/controllers/api/v1/auth/sessions_controller.rb` look like this:
+```
+class Api::V1::Auth::SessionsController < ApplicationController
+  before_action :authenticate_user!, only: [:destroy]
+  respond_to :json
+
+  def create
+    user_params = params.dig(:user) || params.dig(:session, :user)
+
+    if user_params.present?
+      user = User.find_by(email: user_params[:email])
+
+      if user&.valid_password?(user_params[:password])
+        token = Warden::JWTAuth::UserEncoder.new.call(user, :user, nil).first
+        render json: {
+          token: token,
+          status: { code: 200, message: 'Logged in successfully.' }
+        }, status: :ok
+      else
+        render json: {
+          status: 401,
+          message: 'Invalid email or password.'
+        }, status: :unauthorized
+      end
+    else
+      render json: {
+        status: 400,
+        message: 'Invalid parameters.'
+      }, status: :bad_request
+    end
+  end
+
+  def destroy
+    if current_user
+      # Assuming you have a method to handle logout logic
+      render json: {
+        status: 200,
+        message: 'Logged out successfully.'
+      }, status: :ok
+    else
+      render json: {
+        status: 401,
+        message: "Couldn't find an active session."
+      }, status: :unauthorized
+    end
+  end
+end
+```
+
+### Current User Endpoint
+- `cd ~/app/backend`
+- `rails g controller Api::V1::Auth::current_user index`
+- make `~/app/backend/app/controllers/api/v1/auth/current_user_controller.rb` look like this:
+```
+class Api::V1::Auth::CurrentUserController < ApplicationController
+  before_action :authenticate_user!
+  def index
+    render json: UserSerializer.new(current_user).serializable_hash[:data][:attributes], status: :ok
+  end
+end
+```
+- make `~/app/backend/config/routes.rb` look like this:
+```
+# frozen_string_literal: true
+
+Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      namespace :auth do
+        get 'current_user', to: 'current_user#index'
+        post 'login', to: 'sessions#create'
+        delete 'logout', to: 'sessions#destroy'
+      end
+      resources :users, param: :uuid
+      get 'up' => 'health#show'
+    end
+  end
+  devise_for :users, path: '', path_names: {
+    sign_in: 'api/v1/auth/login',
+    sign_out: 'api/v1/auth/logout',
+    registration: 'api/v1/auth/signup'
+  }, controllers: {
+    sessions: 'api/v1/auth/sessions',
+    registrations: 'api/v1/auth/registrations'
+  }
+end
+```
+
+### User Seeds
+- `cd ~/app/backend`
+- make `~/app/backend/db/seeds.rb` look like this:
+```
+User.create!(email: 'test@mail.com', password: 'password', admin: true)
+User.create!(email: 'test2@mail.com', password: 'password')
+```
+
+### Update Backend For Prod
+- Our backend API was working on prod last time we checked, but that was just a simple API call that wasn't pulling anything from the database at all. We've now added database calls to our frontend and backend code and everything is working locally. But if we deploy either our frontend or backend code to fly.io now, we'll see quite a few errors. So let's fix all that now.
+- `cd ~/app/backend`
+- in `~/app/backend/config/puma.rb`, below the `port ENV.fetch('PORT', 3000)` on line 37, add this:
+```
+# Specifies the `bind` address that Puma will listen on.
+bind "tcp://0.0.0.0:#{ENV.fetch('PORT', 3000)}"
+```
+- `touch config/initializers/default_url_options.rb`
+- make `~/app/backend/config/initializers/default_url_options.rb` look like this:
+```
+# config/initializers/default_url_options.rb
+
+Rails.application.routes.default_url_options = {
+  host: ENV['DEFAULT_URL_HOST'] || 'localhost',
+  port: ENV['DEFAULT_URL_PORT'] || 3000
+}
+
+# Optionally, you can set different options for different environments
+Rails.application.configure do
+  config.action_mailer.default_url_options = { host: ENV['DEFAULT_URL_HOST'] || 'localhost', port: ENV['DEFAULT_URL_PORT'] || 3000 }
+end
+```
+
+### Add SECRET_KEY_BASE To CircleCI
+- You may run into `SECRET_KEY_BASE` issues. In that case:
+  - in `~/app/backend/config/initializers/devise.rb`:
+    - right above `Devise.setup do |config|`, add `raise "SECRET_KEY_BASE is missing" if ENV['SECRET_KEY_BASE'].nil? && Rails.env.production?`
+    - right below `Devise.setup do |config|`, add `config.secret_key = ENV['SECRET_KEY_BASE'] || 'dummy_secret_key_for_tests'`
+  - add your `SECRET_KEY_BASE` to CircleCI:
+    - `cd ~/app/backend`
+    - `EDITOR="code --wait" rails credentials:edit`
+      - copy the value of the `secret-key-base` and close the creds file
+    - in the CircleCI UI, go to Project Settings -> Environment Variables
+    - Add `SECRET_KEY_BASE` and paste your copied value in for the value
+    - TODO: Maybe also add the POSTGRES_PASSWORD here?
+
+### Test The API
+- `cd ~/app/backend`
+- `rails server`
+- split your terminal and in the second pane, run `curl -H 'Content-Type: application/json' -X POST -d '{"user": { "email": "test@mail.com", "password" : "password" }}' http://localhost:3000/api/v1/auth/signup`
+- You should see a `status: 200` in the response somewhere and now a user is created. We will test the login API next, but first we must set the user's email to confirmed in the database. In your first terminal (the rails server one):
+  - `^ + c` -> to kill the server
+  - `rails console`
+  - `user = User.find_by(email: "test@mail.com")`
+  - `user.confirmed_at = Time.now`
+  - `user.save!`
+  - `exit`  
+  - `rails server` -> to restart the server
+- in the second terminal now run `curl -H 'Content-Type: application/json' -X POST -d '{"user": { "email": "test@mail.com", "password" : "password" }}' http://localhost:3000/api/v1/auth/login`
+- you should see a `status: 200` in the response somewhere a long `token` string and now our user is logged in
+- kill the server with `^ + c`
+- `rm spec/requests/api/v1/current_user_spec.rb` (TODO: I'm not 100% the correct path here)
+
+### Test The UI Locally
+- `cd ~/app/frontend`
+- `npm run front-and-back-dev`
+- in a browser, go to http://localhost:3001
+  - home & public pages should work
+  - logging in (with the default `test@mail.com` / `password`) should work and should show the Private page link and the user avatar for the user menu
+  - logging out should work
