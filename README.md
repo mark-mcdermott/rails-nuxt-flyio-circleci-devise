@@ -1118,6 +1118,10 @@ export default defineNuxtConfig({
 - make `~/frontend/app.vue` look like this:
 ```
 <!-- frontend/app.vue -->
+<script setup>
+const colorMode = useColorMode()
+colorMode.preference = 'light' // Forces light mode
+</script>
 
 <template>
   <div class="max-w-[1100px] mx-auto">
@@ -1191,9 +1195,16 @@ export default defineNuxtConfig({
 }
 ```
 - `npx ui-thing@latest add container navigation-menu navigation-menu-link scroll-area sheet`
-- go to https://ui-thing.behonbaker.com/blocks/navigation and copy the code on Style One and paste it all into `frontend/components/Header.vue`
-- change the `<UiNavigationMenu>` and the `<NuxtLink>` above it to this:
+- change `components/Header.vue` to this:
 ```
+<!-- frontend/components/Header.vue -->
+
+<script lang="ts" setup></script>
+
+<template>
+  <header class="z-20 border-b bg-background/90 backdrop-blur">
+    <UiContainer class="flex h-16 items-center justify-between lg:h-20">
+      <div class="flex items-center gap-10">
         <NuxtLink to="/" class="flex items-center gap-3">
           <!-- eslint-disable-next-line vue/html-self-closing -->
           <img
@@ -1230,6 +1241,55 @@ export default defineNuxtConfig({
             </UiNavigationMenuItem>
           </UiNavigationMenuList>
         </UiNavigationMenu>
+      </div>
+      <div class="lg:hidden">
+        <UiSheet>
+          <UiSheetTrigger as-child>
+            <UiButton variant="ghost" size="icon-sm">
+              <Icon name="lucide:menu" class="h-5 w-5" />
+            </UiButton>
+            <UiSheetContent class="w-[90%] p-0">
+              <template #content>
+                <UiSheetTitle class="sr-only" title="Mobile menu" />
+                <UiSheetDescription class="sr-only" description="Mobile menu" />
+                <UiSheetX class="z-20" />
+
+                <UiScrollArea class="h-full p-5">
+                  <div class="flex flex-col gap-2">
+                    <UiButton variant="ghost" class="justify-start text-base" to="/">
+                      Home
+                    </UiButton>
+                    <UiButton variant="ghost" class="justify-start text-base" to="/public">
+                      Public
+                    </UiButton>
+                    <UiButton variant="ghost" class="justify-start text-base" to="/private">
+                      Private
+                    </UiButton>
+                    <UiGradientDivider class="my-5" />
+                    <UiButton to="signup">
+                      Sign up
+                    </UiButton>
+                    <UiButton variant="outline" to="login">
+                      Log in
+                    </UiButton>
+                  </div>
+                </UiScrollArea>
+              </template>
+            </UiSheetContent>
+          </UiSheetTrigger>
+        </UiSheet>
+      </div>
+      <div class="hidden items-center gap-3 lg:flex">
+        <UiButton to="login" variant="ghost" size="sm">
+          Log in
+        </UiButton>
+        <UiButton to="signup" size="sm">
+          Sign up
+        </UiButton>
+      </div>
+    </UiContainer>
+  </header>
+</template>
 ```
 - Let's create a page component
   - `touch components/Page.vue`
