@@ -1040,32 +1040,41 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: WebViewScreen(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
-  late final WebViewController controller;
+class WebViewScreen extends StatefulWidget {
+  const WebViewScreen({super.key});
+
+  @override
+  State<WebViewScreen> createState() => _WebViewScreenState();
+}
+
+class _WebViewScreenState extends State<WebViewScreen> {
+  late final WebViewController _controller;
 
   @override
   void initState() {
     super.initState();
-    controller = WebViewController()
+    _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('<frontend app url>'));
+      ..loadRequest(Uri.parse("https://app001-frontend.fly.dev"));
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: SafeArea(
-          child: WebViewWidget(controller: controller),
-        ),
+    return Scaffold(
+      body: SafeArea( 
+        child: WebViewWidget(controller: _controller),
       ),
     );
   }
