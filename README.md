@@ -949,7 +949,7 @@ end
 - `npm run lint` -> you can see it fixed most of the issues
 - `cd ..`
 
-# Part II: Pages, Capacitor, Auth and ThingUI 
+# Part II: Pages, Flutter, Auth and UIThing 
 
 ## Add Pages
 - `cd frontend`
@@ -1026,8 +1026,8 @@ end
 ```
 - `cd ..`
 
-## Flutter With WebViews
-- `cd` into the root folder of our app if you're not there already
+## Add Flutter With WebViews
+- `cd` into the root folder of our app (`app/`)if you're not there already
 - `flutter create flutter_app`
 - `cd flutter_app`
 - `flutter pub add webview_flutter`
@@ -1100,3 +1100,259 @@ class _WebViewScreenState extends State<WebViewScreen> {
 - open two terminal tabs
   - in the first tab run `flutter run -d <iphone simulator id>`
   - in the second tab run `flutter run -d <android emulator id>`
+
+## Tailwind
+- We'll use [Nuxt Tailwind](https://tailwindcss.nuxtjs.org) for modern, scaleable css. We'll setup tailwind now because UI Thing we set up in the next step needs it.
+- install the VSCode extension `vscode-tailwind-magic`
+- `cd ~/app/frontend`
+- `npx nuxi@latest module add tailwindcss`
+- For the record, installing the tailwind module added itself to our module list in  `~/app/frontend/nuxt.config.ts`, which now looks something like this now:
+```
+export default defineNuxtConfig({
+  devtools: { enabled: true },
+  runtimeConfig: { public: { apiBase: 'http://localhost:3000/api/v1' }},
+  devServer: { port: 3001 },
+  modules: ['@nuxt/test-utils/module', '@nuxtjs/tailwindcss'],
+})
+```
+- make `~/frontend/app.vue` look like this:
+```
+<!-- frontend/app.vue -->
+
+<template>
+  <div class="max-w-[1100px] mx-auto">
+    <Header />
+    <NuxtPage />
+    <Hello />
+  </div>
+</template>
+```
+`npm run dev` -> "Hello World" in sans serif font Inter
+^ + c
+
+## UI Thing
+- We'll use [UI Thing](https://ui-thing.behonbaker.com), for our UI kit. A UI kit is a collection of re-usable [shadcn-ui](https://ui.shadcn.com/) components and component blocks. Specifically, UI Thing is a port of [shadc-vue](https://www.shadcn-vue.com/) for Nuxt. We'll setup UI Thing now because our non-placeholder homepage we build in the next section uses it.
+- `cd ~/app/frontend`
+- `npx ui-thing@latest init`
+  - pick a theme color when prompted
+  - you can hit enter for all the other questions including for npm
+- `npm i -D @iconify-json/lucide`
+- For the record, the UI Thing install added a handful of packages and modules and added some extra configurations to our `~/app/frontend/nuxt.config.ts`, which now looks something like this:
+```
+export default defineNuxtConfig({
+  devtools: { enabled: true },
+  runtimeConfig: { public: { apiBase: "http://localhost:3000/api/v1" } },
+  devServer: { port: 3001 },
+
+  modules: [
+    "@nuxt/test-utils/module",
+    "@nuxtjs/tailwindcss",
+    "@nuxtjs/color-mode",
+    "@vueuse/nuxt",
+    "@nuxt/icon",
+  ],
+
+  tailwindcss: {
+    exposeConfig: true,
+  },
+
+  colorMode: {
+    classSuffix: "",
+  },
+
+  imports: {
+    imports: [
+      {
+        from: "tailwind-variants",
+        name: "tv",
+      },
+      {
+        from: "tailwind-variants",
+        name: "VariantProps",
+        type: true,
+      },
+    ],
+  },
+});
+```
+- `npm install @tailwindcss/typography`
+- add this to the bottom of `frontend/assets/css/tailwindcss`
+```
+@layer base {
+  h1 {
+    @apply text-5xl font-bold;
+  }
+  h2 {
+    @apply text-4xl font-bold;
+  }
+  h3 {
+    @apply text-3xl font-semibold;
+  }
+}
+```
+- `npx ui-thing@latest add container navigation-menu navigation-menu-link scroll-area sheet`
+- go to https://ui-thing.behonbaker.com/blocks/navigation and copy the code on Style One and paste it all into `frontend/components/Header.vue`
+- change the `<UiNavigationMenu>` and the `<NuxtLink>` above it to this:
+```
+        <NuxtLink to="/" class="flex items-center gap-3">
+          <!-- eslint-disable-next-line vue/html-self-closing -->
+          <img
+            src="/icon.png"
+            fit="contain"
+            alt="Company Logo"
+            title="Company Logo"
+            class="h-6 object-contain lg:h-8"
+          />
+          <span class="font-semibold lg:text-lg">Ruxtmin</span>
+        </NuxtLink>
+        <UiNavigationMenu as="nav" class="hidden items-center justify-start gap-8 lg:flex">
+          <UiNavigationMenuList class="gap-2">
+            <UiNavigationMenuItem>
+              <UiNavigationMenuLink as-child>
+                <UiButton to="/" variant="ghost" size="sm">
+                  Home
+                </UiButton>
+              </UiNavigationMenuLink>
+            </UiNavigationMenuItem>
+            <UiNavigationMenuItem>
+              <UiNavigationMenuLink as-child>
+                <UiButton to="/public" variant="ghost" size="sm">
+                  Public
+                </UiButton>
+              </UiNavigationMenuLink>
+            </UiNavigationMenuItem>
+            <UiNavigationMenuItem>
+              <UiNavigationMenuLink as-child>
+                <UiButton to="/private" variant="ghost" size="sm">
+                  Private
+                </UiButton>
+              </UiNavigationMenuLink>
+            </UiNavigationMenuItem>
+          </UiNavigationMenuList>
+        </UiNavigationMenu>
+```
+- Let's create a page component
+  - `touch components/Page.vue`
+  ```
+<!-- frontend/components/Page.vue -->
+
+<script lang="ts" setup>
+withDefaults(
+  defineProps<{
+    title?: string
+    text?: string
+  }>(),
+  {
+    title: 'Placeholder Title',
+    text: 'Placeholder body copy',
+  },
+)
+</script>
+
+<template>
+  <UiContainer class="py-16 lg:py-24">
+    <slot name="title">
+      <h2 class="mb-4 mt-2 text-4xl font-bold lg:mb-6 lg:mt-3 lg:text-5xl">
+        {{ title }}
+      </h2>
+    </slot>
+    <div class="mt-5 flex w-full flex-col gap-3 lg:w-auto max-w-[800px]">
+      <slot>
+        {{ text }}
+      </slot>
+    </div>
+  </UiContainer>
+</template>
+  ```
+- Let's redo our homepage at `pages/index.vue` with our new page component:
+```
+<!-- frontend/pages/index.vue -->
+
+<script lang="ts" setup></script>
+
+<template>
+  <Page title="Home">
+    <p class="text-lg lg:text-xl">
+      Hello, everyone. Well it’s official. Old Dwight is lame and New Dwight is cool.
+    </p>
+  </Page>
+</template>
+```
+- Let's redo our public page at `pages/public.vue` with our new page component:
+```
+<!-- frontend/pages/public.vue -->
+
+<script lang="ts" setup></script>
+
+<template>
+  <Page title="Public">
+    <p class="text-lg lg:text-xl">
+      It's overlapping. It's all spilling over the edge. One word, two syllables. Demarcation.
+    </p>
+  </Page>
+</template>
+```
+- Let's redo our private page at `pages/private.vue` with our new page component:
+```
+<!-- frontend/pages/private.vue -->
+
+<script lang="ts" setup></script>
+
+<template>
+  <Page title="Private">
+    <p class="text-lg lg:text-xl">
+      People I respect, heroes of mine, would be Bob Hope... Abraham Lincoln, definitely. Bono. And probably God would be the fourth one. And I just think all those people really helped the world in so many ways that it's really beyond words. It's really incalculable.
+    </p>
+  </Page>
+</template>
+```
+- Let's rename our `Hello.vue` component at `components/Hello.vue` to `Footer.vue` and change `Footer.vue` to this:
+```
+<!-- frontend/components/Footer.vue -->
+
+<script lang="ts" setup>
+import { onMounted, ref } from 'vue'
+
+const runtimeConfig = useRuntimeConfig()
+const message = ref('Backend: Unavailable') // Default state
+
+onMounted(async () => {
+  try {
+    const response = await fetch(`${runtimeConfig.public.apiURL}/hello`)
+    if (!response.ok)
+      throw new Error('Failed to fetch')
+
+    const data = await response.json()
+
+    // If the backend responds with a valid message, set "Running"
+    message.value = data.message ? 'Running' : 'No response'
+  }
+  catch (error) {
+    message.value = 'Backend: Unavailable'
+  }
+})
+</script>
+
+<template>
+  <UiContainer
+    as="footer"
+    class="flex flex-col items-center justify-center gap-7 py-12 lg:flex-row lg:justify-end"
+  >
+    <p class="text-muted-foreground">
+      Frontend: <code>Running</code>
+    </p>
+    <p class="text-muted-foreground">
+      Backend: <code>{{ message }}</code>
+    </p>
+    <p class="text-muted-foreground">
+      &copy; {{ new Date().getFullYear() }} Ruxtmin
+    </p>
+  </UiContainer>
+</template>
+
+<style scoped>
+  code {
+    font-weight: 600
+  }
+</style>
+```
