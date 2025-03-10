@@ -1302,7 +1302,7 @@ export default defineNuxtConfig({
 ```
 - Let's create a page component
   - `touch components/Page.vue`
-  ```
+```
 <!-- frontend/components/Page.vue -->
 
 <script lang="ts" setup>
@@ -1332,7 +1332,7 @@ withDefaults(
     </div>
   </UiContainer>
 </template>
-  ```
+```
 - Let's redo our homepage at `pages/index.vue` with our new page component:
 ```
 <!-- frontend/pages/index.vue -->
