@@ -1115,6 +1115,15 @@ export default defineNuxtConfig({
   modules: ['@nuxt/test-utils/module', '@nuxtjs/tailwindcss'],
 })
 ```
+- add this to the top of `frontend/tailwind.config.js`, right inside `module.exports = {`
+```
+  content: [
+    './components/**/*.{vue,js,ts}',
+    './layouts/**/*.{vue,js,ts}',
+    './pages/**/*.{vue,js,ts}',
+    './app.vue',
+  ],
+```
 - make `~/frontend/app.vue` look like this:
 ```
 <!-- frontend/app.vue -->
@@ -1415,4 +1424,120 @@ onMounted(async () => {
     font-weight: 600
   }
 </style>
+```
+- Let's create our login page:
+- `touch pages/login.vue`
+```
+<!-- frontend/pages/login.vue -->
+
+<script lang="ts" setup>
+import type { InferType } from 'yup'
+import { object, string } from 'yup'
+
+useSeoMeta({
+  title: 'Log in',
+  description: 'Enter your email & password to log in.',
+})
+
+const LoginSchema = object({
+  email: string().email().required().label('Email'),
+  password: string().required().label('Password').min(8),
+})
+
+const { handleSubmit, isSubmitting } = useForm<InferType<typeof LoginSchema>>({
+  validationSchema: LoginSchema,
+})
+
+const submit = handleSubmit(async (_) => {
+  useSonner('Logged in successfully!', {
+    description: 'You have successfully logged in.',
+  })
+})
+</script>
+
+<template>
+  <Page title="Login">
+    <div class="flex h-screen">
+      <div class="w-full max-w-[330px] px-5 overflow-visible">
+        <p class="mt-8 text-sm">
+          Enter your email & password to log in.
+        </p>
+        <form class="mt-10" @submit="submit">
+          <fieldset :disabled="isSubmitting" class="grid space-y-5">
+            <div>
+              <UiVeeInput label="Email" type="email" name="email" placeholder="john@example.com" />
+            </div>
+            <div>
+              <UiVeeInput label="Password" type="password" name="password" />
+            </div>
+            <div>
+              <UiButton class="w-full" type="submit" text="Log in" />
+            </div>
+          </fieldset>
+        </form>
+        <p class="mt-4 text-sm text-muted-foreground">
+          Don't have an account?
+          <NuxtLink class="font-semibold text-primary underline-offset-2 hover:underline" to="/signup">
+            Create account
+          </NuxtLink>
+        </p>
+      </div>
+    </div>
+  </Page>
+</template>
+```
+- Let's create the signup page.
+- `touch pages/signup.vue`
+```
+<!-- frontend/pages/signup.vue -->
+
+<script lang="ts" setup>
+import type { InferType } from 'yup'
+import { object, string } from 'yup'
+
+useSeoMeta({
+  title: 'Log in',
+  description: 'Enter your email & create a password to sign up.',
+})
+
+const LoginSchema = object({
+  email: string().email().required().label('Email'),
+  password: string().required().label('Password').min(8),
+})
+
+const { handleSubmit, isSubmitting } = useForm<InferType<typeof LoginSchema>>({
+  validationSchema: LoginSchema,
+})
+
+const submit = handleSubmit(async (_) => {
+  useSonner('Logged in successfully!', {
+    description: 'You have successfully logged in.',
+  })
+})
+</script>
+
+<template>
+  <Page title="Signup">
+    <div class="flex h-screen">
+      <div class="w-full max-w-[330px] px-5 overflow-visible">
+        <p class="mt-8 text-sm">
+          Enter your email & password to log in.
+        </p>
+        <form class="mt-10" @submit="submit">
+          <fieldset :disabled="isSubmitting" class="grid space-y-5">
+            <div>
+              <UiVeeInput label="Email" type="email" name="email" placeholder="john@example.com" />
+            </div>
+            <div>
+              <UiVeeInput label="Password" type="password" name="password" />
+            </div>
+            <div>
+              <UiButton class="w-full" type="submit" text="Sign up" />
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </Page>
+</template>
 ```
