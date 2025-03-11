@@ -1605,7 +1605,6 @@ v-if="status === 'authenticated'"
       </div>
 ```
 
-
 ## Devise
 - `cd ~/app/backend`
 - `rails db:create` (or `rails db:drop db:create` if you already have a database called `backend`)
@@ -2056,3 +2055,17 @@ end
   - home & public pages should work
   - logging in (with the default `test@mail.com` / `password`) should work and should show the Private page link and the user avatar for the user menu
   - logging out should work
+
+### Redeploy to Fly.io
+- in the frontend folder: `fly deploy`
+- in the backend folder: `fly deploy`
+- `fly ssh console`
+  - `bin/rails db:seed`
+  - `exit`
+- Our one user has been seeded in prod, but is still not confirmed and login will error unless we confirm them:
+  - `fly console`
+  - `user = User.find_by(email: "test@mail.com")`
+  - `user.confirmed_at = Time.now`
+  - `user.save!`
+  - `exit`  
+
