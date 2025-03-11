@@ -1430,29 +1430,17 @@ onMounted(async () => {
 ```
 <!-- frontend/pages/login.vue -->
 
-<script lang="ts" setup>
-import type { InferType } from 'yup'
-import { object, string } from 'yup'
+<script setup>
+const { signIn } = useAuth()
+definePageMeta({ auth: false })
+const email = ref('test@mail.com')
+const password = ref('password')
 
-useSeoMeta({
-  title: 'Log in',
-  description: 'Enter your email & password to log in.',
-})
-
-const LoginSchema = object({
-  email: string().email().required().label('Email'),
-  password: string().required().label('Password').min(8),
-})
-
-const { handleSubmit, isSubmitting } = useForm<InferType<typeof LoginSchema>>({
-  validationSchema: LoginSchema,
-})
-
-const submit = handleSubmit(async (_) => {
-  useSonner('Logged in successfully!', {
-    description: 'You have successfully logged in.',
-  })
-})
+async function login() {
+  await signIn({ user: { email: email.value, password: password.value } }, { redirect: false })
+  useSonner('Logged in successfully!', { description: 'You have successfully logged in.' })
+  navigateTo('/')
+}
 </script>
 
 <template>
@@ -1462,8 +1450,8 @@ const submit = handleSubmit(async (_) => {
         <p class="mt-8 text-sm">
           Enter your email & password to log in.
         </p>
-        <form class="mt-10" @submit="submit">
-          <fieldset :disabled="isSubmitting" class="grid space-y-5">
+        <form class="mt-10">
+          <fieldset class="grid space-y-5">
             <div>
               <UiVeeInput label="Email" type="email" name="email" placeholder="john@example.com" />
             </div>
@@ -1471,7 +1459,7 @@ const submit = handleSubmit(async (_) => {
               <UiVeeInput label="Password" type="password" name="password" />
             </div>
             <div>
-              <UiButton class="w-full" type="submit" text="Log in" />
+              <UiButton class="w-full" type="submit" text="Log in" @click.prevent="login" />
             </div>
           </fieldset>
         </form>
@@ -1491,29 +1479,19 @@ const submit = handleSubmit(async (_) => {
 ```
 <!-- frontend/pages/signup.vue -->
 
-<script lang="ts" setup>
-import type { InferType } from 'yup'
-import { object, string } from 'yup'
+<script setup>
+const { signUp } = useAuth()
 
-useSeoMeta({
-  title: 'Log in',
-  description: 'Enter your email & create a password to sign up.',
-})
+definePageMeta({ auth: false })
 
-const LoginSchema = object({
-  email: string().email().required().label('Email'),
-  password: string().required().label('Password').min(8),
-})
+const email = ref('')
+const password = ref('')
 
-const { handleSubmit, isSubmitting } = useForm<InferType<typeof LoginSchema>>({
-  validationSchema: LoginSchema,
-})
-
-const submit = handleSubmit(async (_) => {
-  useSonner('Logged in successfully!', {
-    description: 'You have successfully logged in.',
-  })
-})
+async function register() {
+  await signUp({ user: { email: email.value, password: password.value } }, { redirect: false })
+  useSonner('Signed up successfully!', { description: 'You have successfully signed up.' })
+  navigateTo('/confirm')
+}
 </script>
 
 <template>
@@ -1526,13 +1504,13 @@ const submit = handleSubmit(async (_) => {
         <form class="mt-10" @submit="submit">
           <fieldset :disabled="isSubmitting" class="grid space-y-5">
             <div>
-              <UiVeeInput label="Email" type="email" name="email" placeholder="john@example.com" />
+              <UiVeeInput v-model="email" label="Email" type="email" name="email" placeholder="test@mail.com" />
             </div>
             <div>
-              <UiVeeInput label="Password" type="password" name="password" />
+              <UiVeeInput v-model="password" label="Password" type="password" name="password" placeholder="password" />
             </div>
             <div>
-              <UiButton class="w-full" type="submit" text="Sign up" />
+              <UiButton class="w-full" type="submit" text="Sign up" @click.prevent="register" />
             </div>
           </fieldset>
         </form>
@@ -1541,6 +1519,93 @@ const submit = handleSubmit(async (_) => {
   </Page>
 </template>
 ```
+### Install Sidebase Nuxt-Auth
+- Next we'll setup our signup/login functionality with `@sidebase/nuxt-auth`
+- `cd ~/app/frontend`
+- `npx nuxi@latest module add @sidebase/nuxt-auth`
+- `npm install`
+
+### Setup Sidebase Nuxt-Auth
+- Sidebase Nuxt Auth keeps its settings under `auth` in `nuxt.config.ts`. Here we'll lock down all pages by default with `globalAppMiddleware: { isEnabled: true }` and we also specify all our auth endpoints.
+- `cd ~/app/frontend`
+- add this line to the top of `~/app/frontend/nuxt.congif.js` (above the `export default defineNuxtConfig<{`}):
+```
+const development = process.env.NODE_ENV !== 'production'
+```
+- add this `auth` section to `~/app/frontend/nuxt.config.js`--making sure to replace both `<backend url>` instances with your backend url:
+```
+  auth: {
+    computed: { pathname: development ? 'http://localhost:3000/api/v1/auth/' : '<backend url>/api/v1/auth/' },
+    isEnabled: true,
+    baseURL: development ? 'http://localhost:3000/api/v1/auth/' : '<backend url>/api/v1/auth/',
+    globalAppMiddleware: { isEnabled: true },
+    provider: {
+      type: 'local',
+      pages: { login: '/' },
+      token: { signInResponseTokenPointer: '/token' },
+      endpoints: {
+        signIn: { path: 'login', method: 'post' },
+        signOut: { path: 'logout', method: 'delete' },
+        signUp: { path: 'signup', method: 'post' },
+        getSession: { path: 'current_user', method: 'get' },
+      },
+    },
+  }
+```
+
+### Unlock The Public Page
+- Because we have `globalAppMiddleware: { isEnabled: true }` in `nuxt.config.ts`, if a user is logged out, all pages redirect to the homepage. To override this behaivor on specific pages and make them public, we add `definePageMeta({ auth: false })` in the page's `script` section.
+- `cd ~/app/frontend`
+- to the top of `~/app/frontend/pages/public.vue` add:
+```
+<script>
+definePageMeta({ auth: false })
+</script>
+```
+
+### Hide The Private Page Link
+- Right now if you are logged out and click the link to the private page, you're redirected to the homepage, which is what we want. But we also don't even want the link to the private page to show at all for users who are logged out. Sidebase Nuxt Auth gives us a `useAuth()` method which has a `status` property. With `status`, we can add conditional vue logic in templates like `v-if="status === 'authenticated'"` which will only render it's tag if the user is logged in.
+- `cd ~/app/frontend`
+- add this script section to `~/app/frontend/components/Header.vue`:
+```
+<script setup>
+const { data, signOut, status } = useAuth()
+
+const uuid = computed(() => {
+  if (data && data.value) {
+    return data.value.uuid
+  }
+  return ''
+})
+
+async function logout() {
+  await signOut({ callbackUrl: '/' })
+  useSonner('Logged out successfully!', { description: 'You have successfully logged out.' })
+}
+</script>
+```
+- add this to the private `UiNavigationMenuItem`s:
+```
+v-if="status === 'authenticated'"
+```
+- We also want to only show the login/signup buttons if the used is logged out and if the user is logged in, show the logout button. Change the login/signup button area to this:
+```
+      <div v-if="status !== 'authenticated'" class="hidden items-center gap-3 lg:flex">
+        <UiButton to="login" variant="ghost" size="sm">
+          Log in
+        </UiButton>
+        <UiButton to="signup" size="sm">
+          Sign up
+        </UiButton>
+      </div>
+      <div v-if="status === 'authenticated'" class="hidden items-center gap-3 lg:flex">
+        <UiButton to="logout" variant="ghost" size="sm" @click.prevent="logout">
+          Log out
+        </UiButton>
+      </div>
+```
+
+
 ## Devise
 - `cd ~/app/backend`
 - `rails db:create` (or `rails db:drop db:create` if you already have a database called `backend`)
